@@ -71,7 +71,7 @@
   .monthnav h2 { margin: 0; font-size: 18px; }
   .grp-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .grp-h h3 { margin: 0; }
-  .grp-h b { font-size: 15px; }
+  .grp-h b { font-size: 15px; white-space: nowrap; }
   .grp-sub { font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
   .cardsub { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 10px 0 2px; padding-top: 8px; border-top: 1px dashed var(--line); }
   .cardsub:first-of-type { border-top: 0; padding-top: 0; }
@@ -187,14 +187,6 @@
         <select id="fModo"><option value="parcela">Valor de cada parcela</option><option value="total">Valor total da compra</option></select>
       </div>
 
-      <div id="boxFixo">
-        <div class="toggle">
-          <span>Fixa (todo mês)</span>
-          <label class="sw" style="margin:0"><input type="checkbox" id="fFixo"><i></i></label>
-        </div>
-        <div class="hint hidden" id="hintFixo">Fica cadastrada como recorrente e entra sozinha todo mês, a partir do próximo. Se o valor mudar em algum mês, ajuste na aba Mês.</div>
-      </div>
-
       <div id="boxMar">
         <div class="toggle">
           <span>Dividir com a Mariana</span>
@@ -210,8 +202,13 @@
       <button class="btn" id="btnSalvar">Salvar lançamento</button>
     </div>
     <div class="card">
-      <h3>Últimos lançamentos do mês</h3>
-      <div id="ultimos" class="loading">Carregando…</div>
+      <div class="grp-h"><h3>Cartão de crédito · últimas compras</h3></div>
+      <div id="ultCartao" class="loading">Carregando…</div>
+    </div>
+    <div class="card">
+      <div class="grp-h"><h3 id="tFixas">Despesas fixas do mês</h3><b id="totFixas"></b></div>
+      <div class="grp-sub" id="subFixas"></div>
+      <div id="ultFixas" class="loading">Carregando…</div>
     </div>
   </section>
 
@@ -352,8 +349,6 @@
   function atualizarHint() {
     if (!S.init) return;
     const n = Math.max(1, parseInt($('fParc').value, 10) || 1);
-    $('boxFixo').classList.toggle('hidden', !((S.tipo === 'Despesa' && n === 1) || S.tipo === 'Receita'));
-    $('hintFixo').classList.toggle('hidden', !$('fFixo').checked);
     $('boxModo').classList.toggle('hidden', !(S.tipo === 'Despesa' && n > 1));
     $('boxPct').classList.toggle('hidden', !$('fDiv').checked);
     const v = parseValor($('fValor').value) || 0;
@@ -397,17 +392,16 @@
       const r = await run('addTransaction', {
         tipo: S.tipo, data: $('fData').value, descricao: desc, categoria: $('fCat').value, meio: $('fMeio').value,
         valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked,
-        pctMariana: (Number($('fPct').value) || 50) / 100, pago: true,
-        fixo: $('fFixo').checked && !$('boxFixo').classList.contains('hidden')
+        pctMariana: (Number($('fPct').value) || 50) / 100, pago: true
       });
       toast(r.ids.length > 1 ? `${r.ids.length} parcelas salvas (${mesCurto(r.competencias[0])} a ${mesCurto(r.competencias.at(-1))}).`
                              : `Salvo em ${mesCurto(r.competencias[0])}.`);
       S.init.sugestoes[desc] = { cat: $('fCat').value, meio: $('fMeio').value, mariana: $('fDiv').checked };
       atualizarDatalist();
-      if ($('fFixo').checked) toast('Salvo e cadastrado como fixo: entra sozinho todo mês.');
-      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false; $('fFixo').checked = false;
+      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false;
       atualizarHint();
-      if (r.resumo.comp === S.mesAtual) { S.resumo = r.resumo; renderHeader(r.resumo); renderUltimos(r.resumo); }
+      if (r.resumo.comp === S.mesAtual) { renderHeader(r.resumo); renderUltimos(r.resumo); }
+      else if (r.resumo.comp === addMes(S.mesAtual, 1)) renderUltimos(null, r.resumo);
       if (S.mesVista === r.resumo.comp) renderMes(r.resumo);
       S.painelSujo = true;
       $('fValor').focus();
@@ -527,10 +521,46 @@
     };
   }
 
-  function renderUltimos(r) {
-    const app = r.itens.slice(0, 8);
-    $('ultimos').className = '';
-    $('ultimos').innerHTML = app.length ? app.map(x => itemHtml(x, false)).join('') : '<div class="s">Nada lançado ainda.</div>';
+  // Lançar: últimas compras no cartão (mês atual + fatura seguinte) e fixas do mês
+  function renderUltimos(r, prox) {
+    if (r) S.resumo = r;
+    if (prox) S.resumoProx = prox;
+    r = S.resumo; prox = S.resumoProx;
+    if (!r) return;
+    const vistos = new Set();
+    const cartao = r.itens.concat(prox ? prox.itens : [])
+      .filter(x => String(x.meio).indexOf('Cartão') === 0 && x.tipo === 'Despesa')
+      .sort((a, b) => (b.data > a.data ? 1 : b.data < a.data ? -1 : 0))
+      .filter(x => { const k = x.compra || x.id; if (vistos.has(k)) return false; vistos.add(k); return true; })
+      .slice(0, 10);
+    const linhaCartao = x => {
+      const fat = x.comp ? mesCurto(x.comp) : '';
+      const sub = [x.data ? x.data.split('-').reverse().slice(0, 2).join('/') : '', x.meio.replace('Cartão ', ''), x.parc ? x.parc.split('/')[1] + 'x' : ''].filter(Boolean).join(' · ');
+      return `<div class="item"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">${esc(sub)}</div></div>
+        <div class="v">${fmt(x.valor)}${x.parc ? '<small>por parcela</small>' : ''}</div></div>`;
+    };
+    $('ultCartao').className = '';
+    $('ultCartao').innerHTML = cartao.length ? cartao.map(linhaCartao).join('') : '<div class="s" style="color:var(--muted)">Nenhuma compra no cartão ainda.</div>';
+
+    const fixas = r.itens.filter(x => x.fixo && x.tipo === 'Despesa');
+    $('ultFixas').className = '';
+    if (fixas.length) {
+      const total = fixas.reduce((s, x) => s + x.valor, 0), aberto = fixas.filter(x => !x.pago).reduce((s, x) => s + x.valor, 0);
+      $('tFixas').textContent = 'Despesas fixas de ' + MESES[Number(r.comp.slice(5, 7)) - 1];
+      $('totFixas').textContent = fmt(total);
+      $('subFixas').textContent = aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo quando pagar.` : 'Todas pagas.';
+      $('ultFixas').innerHTML = fixas.sort((a, b) => a.pago - b.pago).map(x => `<div class="item">
+        <button class="dot${x.pago ? ' on' : ''}" data-pago="${x.id}" aria-label="Pago"></button>
+        <div class="main"><div class="t">${esc(x.desc)}</div><div class="s">${esc(x.cat)}</div></div>
+        <div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('');
+    } else {
+      const prev = (r.fixosPrevistos || []).filter(x => x.tipo === 'Despesa');
+      $('totFixas').textContent = prev.length ? fmt(prev.reduce((s, x) => s + x.valor, 0)) : '';
+      $('subFixas').textContent = prev.length ? 'Previstas: ainda não lançadas neste mês.' : '';
+      $('ultFixas').innerHTML = prev.length ? prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
+        <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}</div></div>`).join('')
+        : '<div class="s" style="color:var(--muted)">Nenhuma despesa fixa cadastrada.</div>';
+    }
   }
 
   function renderMes(r) {
@@ -877,7 +907,10 @@
   }
 
   async function recarregarAtual() {
-    try { const r = await run('getMonthSummary', S.mesAtual); S.resumo = r; renderHeader(r); renderUltimos(r); } catch (e) {}
+    try {
+      const [r, prox] = await Promise.all([run('getMonthSummary', S.mesAtual), run('getMonthSummary', addMes(S.mesAtual, 1))]);
+      renderHeader(r); renderUltimos(r, prox);
+    } catch (e) {}
   }
 
   $('btnSalvar').onclick = salvar;
@@ -890,7 +923,6 @@
   $('mNext').onclick = () => abrirMes(addMes(S.mesVista, 1));
   ['fValor', 'fParc', 'fMeio', 'fData', 'fModo', 'fPct', 'fDiv'].forEach(id => $(id).addEventListener('input', atualizarHint));
   $('fDiv').addEventListener('change', atualizarHint);
-  $('fFixo').addEventListener('change', atualizarHint);
   $('fDesc').addEventListener('change', aplicarSugestao);
 
   $('btnCfg').onclick = () => telaConfig();
