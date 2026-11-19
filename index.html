@@ -69,6 +69,15 @@
   .monthnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .monthnav button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 10px; width: 42px; height: 38px; font-size: 18px; }
   .monthnav h2 { margin: 0; font-size: 18px; }
+  .grp-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .grp-h h3 { margin: 0; }
+  .grp-h b { font-size: 15px; }
+  .grp-sub { font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
+  .cardsub { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 10px 0 2px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .cardsub:first-of-type { border-top: 0; padding-top: 0; }
+  .cardsub button { border: 0; background: var(--chip); color: var(--brand); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 12px; }
+  .item.prev { opacity: .6; }
+  .item .main { cursor: pointer; }
   .bar { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 14px; margin: 8px 0; }
   .bar .track { grid-column: 1 / -1; height: 6px; background: var(--chip); border-radius: 6px; overflow: hidden; }
   .bar .fill { height: 100%; background: var(--brand-2); }
@@ -157,7 +166,7 @@
       </div>
 
       <label for="fValor">Valor (R$)</label>
-      <input id="fValor" class="valor" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      <input id="fValor" class="valor moeda" inputmode="numeric" placeholder="0,00" autocomplete="off">
 
       <label for="fDesc">Descrição</label>
       <input id="fDesc" list="dlDesc" placeholder="Ex.: Bistek" autocomplete="off">
@@ -176,6 +185,14 @@
       <div id="boxModo" class="hidden">
         <label for="fModo">O valor informado é</label>
         <select id="fModo"><option value="parcela">Valor de cada parcela</option><option value="total">Valor total da compra</option></select>
+      </div>
+
+      <div id="boxFixo">
+        <div class="toggle">
+          <span>Fixa (todo mês)</span>
+          <label class="sw" style="margin:0"><input type="checkbox" id="fFixo"><i></i></label>
+        </div>
+        <div class="hint hidden" id="hintFixo">Fica cadastrada como recorrente e entra sozinha todo mês, a partir do próximo. Se o valor mudar em algum mês, ajuste na aba Mês.</div>
       </div>
 
       <div id="boxMar">
@@ -208,14 +225,14 @@
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><small>Entradas</small><b id="kEnt"></b></div>
       <div class="kpi"><small>Despesas</small><b id="kDes"></b></div>
-      <div class="kpi"><small>Repasse Mariana</small><b id="kMar"></b></div>
-      <div class="kpi"><small>Saldo do mês</small><b id="kSal"></b></div>
-      <div class="kpi"><small>Sobra em conta</small><b id="kConta"></b></div>
-      <div class="kpi"><small>Sobra no vale</small><b id="kVale"></b></div>
+      <div class="kpi"><small>Mariana repassa</small><b id="kMar"></b></div>
+      <div class="kpi"><small>Investido no mês</small><b id="kInv"></b></div>
+      <div class="kpi"><small>Sobra em conta no mês</small><b id="kConta"></b></div>
+      <div class="kpi"><small>Saldo previsto na conta</small><b id="kAcum"></b></div>
     </div>
-    <div class="card" id="cFat"><h3>Faturas do mês</h3><div id="fats"></div></div>
+    <div class="hint" id="kExpl" style="margin:-4px 2px 12px"></div>
+    <div id="grupos"></div>
     <div class="card"><h3>Por categoria</h3><div id="cats"></div></div>
-    <div class="card"><h3>Lançamentos</h3><div id="lista"></div></div>
   </section>
 
   <!-- INVESTIR -->
@@ -298,6 +315,15 @@
     clearTimeout(t._h); t._h = setTimeout(() => t.className = 'toast', 3200);
   }
 
+  // Campo de dinheiro estilo app de banco: você digita só números e a vírgula entra sozinha (1234 -> 12,34)
+  const num2 = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!el.classList || !el.classList.contains('moeda')) return;
+    const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
+    el.value = d ? num2(parseInt(d, 10) / 100) : '';
+  });
+
   function parseValor(s) {
     s = String(s).trim().replace(/[R$\s]/g, '');
     if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
@@ -326,6 +352,8 @@
   function atualizarHint() {
     if (!S.init) return;
     const n = Math.max(1, parseInt($('fParc').value, 10) || 1);
+    $('boxFixo').classList.toggle('hidden', !((S.tipo === 'Despesa' && n === 1) || S.tipo === 'Receita'));
+    $('hintFixo').classList.toggle('hidden', !$('fFixo').checked);
     $('boxModo').classList.toggle('hidden', !(S.tipo === 'Despesa' && n > 1));
     $('boxPct').classList.toggle('hidden', !$('fDiv').checked);
     const v = parseValor($('fValor').value) || 0;
@@ -369,13 +397,15 @@
       const r = await run('addTransaction', {
         tipo: S.tipo, data: $('fData').value, descricao: desc, categoria: $('fCat').value, meio: $('fMeio').value,
         valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked,
-        pctMariana: (Number($('fPct').value) || 50) / 100, pago: true
+        pctMariana: (Number($('fPct').value) || 50) / 100, pago: true,
+        fixo: $('fFixo').checked && !$('boxFixo').classList.contains('hidden')
       });
       toast(r.ids.length > 1 ? `${r.ids.length} parcelas salvas (${mesCurto(r.competencias[0])} a ${mesCurto(r.competencias.at(-1))}).`
                              : `Salvo em ${mesCurto(r.competencias[0])}.`);
       S.init.sugestoes[desc] = { cat: $('fCat').value, meio: $('fMeio').value, mariana: $('fDiv').checked };
       atualizarDatalist();
-      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false;
+      if ($('fFixo').checked) toast('Salvo e cadastrado como fixo: entra sozinho todo mês.');
+      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false; $('fFixo').checked = false;
       atualizarHint();
       if (r.resumo.comp === S.mesAtual) { S.resumo = r.resumo; renderHeader(r.resumo); renderUltimos(r.resumo); }
       if (S.mesVista === r.resumo.comp) renderMes(r.resumo);
@@ -404,24 +434,97 @@
   }
 
   function renderHeader(r) {
-    $('hMes').textContent = 'Saldo de ' + mesNome(r.comp);
-    $('hSaldo').textContent = fmt(r.saldo);
+    const mes = MESES[Number(r.comp.slice(5, 7)) - 1];
+    $('hMes').textContent = 'Quanto sobra em ' + mes;
+    $('hSaldo').textContent = fmt(r.sobraConta);
     $('hEnt').textContent = 'Entradas ' + fmt(r.entradas);
     $('hDes').textContent = 'Despesas ' + fmt(r.despesas);
-    $('hMar').textContent = 'Mariana ' + fmt(r.mariana);
-    $('hConta').textContent = 'Em conta ' + fmt(r.sobraConta) + (r.sobraVale ? ' · no vale ' + fmt(r.sobraVale) : '') + (r.aplicacoes ? ' · investido ' + fmt(r.aplicacoes) : '');
+    $('hMar').textContent = 'Mariana repassa ' + fmt(r.mariana);
+    $('hConta').innerHTML = (r.saldoInicialDefinido
+        ? `Saldo previsto na conta no fim de ${mes}: <b>${fmt(r.acumulado)}</b>`
+        : `Para ver o saldo da sua conta, informe o saldo inicial na planilha (aba Config).`)
+      + (r.sobraVale ? `<br>No vale: ${fmt(r.sobraVale)}` : '');
   }
 
-  function itemHtml(x, completo) {
-    const sub = [x.data ? x.data.split('-').reverse().slice(0, 2).join('/') : '', x.cat, x.meio, x.parc].filter(Boolean).join(' · ');
+  function itemHtml(x, completo, semMeio) {
+    const sub = [x.data ? x.data.split('-').reverse().slice(0, 2).join('/') : '', x.cat, semMeio ? '' : x.meio, x.parc].filter(Boolean).join(' · ');
     const mar = x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : '';
-    const val = x.tipo === 'Receita' ? `<div class="v rec">+${fmt(x.valor)}</div>` : `<div class="v">${fmt(x.valor)}${mar}</div>`;
+    const val = x.tipo === 'Receita' ? `<div class="v rec">+${fmt(x.valor)}</div>`
+      : x.cat === 'Acerto Mariana' ? `<div class="v rec">+${fmt(x.mariana)}<small>a receber</small></div>`
+      : `<div class="v">${fmt(x.valor)}${mar}</div>`;
     return `<div class="item">
       ${completo ? `<button class="dot${x.pago ? ' on' : ''}" data-pago="${x.id}" aria-label="Pago"></button>` : ''}
-      <div class="main"><div class="t">${esc(x.desc)}</div><div class="s">${esc(sub)}</div></div>
+      <div class="main"${completo ? ` onclick="editarItem('${x.id}')"` : ''}><div class="t">${esc(String(x.desc).replace(/^Acerto Mariana: /, ''))}</div><div class="s">${esc(sub)}</div></div>
       ${val}
-      ${completo ? `<button class="del" data-del="${x.id}" data-compra="${esc(x.compra)}" aria-label="Excluir">✕</button>` : ''}
     </div>`;
+  }
+
+  // Divide os lançamentos do mês em grupos: receitas, fixas, cartões, pix/débito, vale e acertos
+  function grupos(r) {
+    const it = r.itens, soma = a => a.reduce((s, x) => s + (x.cat === 'Acerto Mariana' ? 0 : x.valor), 0);
+    const ehCartao = x => String(x.meio).indexOf('Cartão') === 0;
+    const rec = it.filter(x => x.tipo === 'Receita');
+    const desp = it.filter(x => x.tipo === 'Despesa');
+    const acertos = desp.filter(x => x.cat === 'Acerto Mariana');
+    const resto = desp.filter(x => x.cat !== 'Acerto Mariana');
+    const fixas = resto.filter(x => x.fixo && !ehCartao(x));
+    const cartao = resto.filter(x => ehCartao(x));
+    const vale = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio === 'Vale alimentação');
+    const avulsas = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio !== 'Vale alimentação');
+    const card = (titulo, sub, total, corpo) => `<div class="card"><div class="grp-h"><h3>${titulo}</h3>${total !== null ? `<b>${fmt(total)}</b>` : ''}</div>
+      ${sub ? `<div class="grp-sub">${sub}</div>` : ''}${corpo}</div>`;
+    let html = '';
+    if (rec.length) html += card('Entradas', '', soma(rec), rec.map(x => itemHtml(x, true)).join(''));
+    if (fixas.length) {
+      const aberto = soma(fixas.filter(x => !x.pago));
+      html += card('Despesas fixas', aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo para marcar como paga.` : 'Todas pagas.', soma(fixas),
+        fixas.map(x => itemHtml(x, true)).join(''));
+    } else if (r.fixosPrevistos && r.fixosPrevistos.length) {
+      const prevRec = r.fixosPrevistos.filter(x => x.tipo === 'Receita');
+      if (prevRec.length && !rec.length) html += card('Entradas (previstas)', 'Ainda não lançadas neste mês.', soma(prevRec),
+        prevRec.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">dia ${x.dia}</div></div><div class="v rec">+${fmt(x.valor)}</div></div>`).join(''));
+      const prev = r.fixosPrevistos.filter(x => x.tipo === 'Despesa');
+      html += card('Despesas fixas (previstas)', 'Ainda não lançadas neste mês. Entram sozinhas no dia 1º (ou pelo menu Painel da planilha).',
+        soma(prev), prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
+          <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join(''));
+    }
+    if (cartao.length) {
+      const porCartao = {};
+      cartao.forEach(x => (porCartao[x.meio] = porCartao[x.meio] || []).push(x));
+      const totCart = Object.keys(porCartao).reduce((s, m) => { const f = (r.faturas || []).find(z => z.meio === m); return s + (f ? f.total : soma(porCartao[m])); }, 0);
+      html += card('Cartão de crédito', 'Faturas que vencem neste mês.', totCart, Object.keys(porCartao).map(m => {
+        const f = (r.faturas || []).find(z => z.meio === m) || { total: soma(porCartao[m]), aberto: 0 };
+        return `<div class="cardsub"><div><b>${esc(m)}</b> · ${fmt(f.total)}<div class="grp-sub">${f.aberto ? 'em aberto ' + fmt(f.aberto) : 'paga'}</div></div>
+          ${f.aberto ? `<button data-fat="${esc(m)}">Marcar como paga</button>` : ''}</div>` + porCartao[m].map(x => itemHtml(x, true, true)).join('');
+      }).join(''));
+    }
+    if (avulsas.length) html += card('Pix, débito e dinheiro', '', soma(avulsas), avulsas.map(x => itemHtml(x, true)).join(''));
+    if (vale.length) html += card('Vale-alimentação', '', soma(vale), vale.map(x => itemHtml(x, true, true)).join(''));
+    if (acertos.length) html += card('A receber da Mariana (avulsos)', '', acertos.reduce((s, x) => s + x.mariana, 0), acertos.map(x => itemHtml(x, true, true)).join(''));
+    return html || '<div class="card"><div class="s">Sem lançamentos neste mês.</div></div>';
+  }
+
+  function editarItem(id) {
+    const x = (S.mesItens || []).find(i => i.id === id); if (!x) return;
+    const valor = x.cat === 'Acerto Mariana' ? x.mariana : Math.abs(x.valor);
+    abrirModal(`<div class="hd"><h2>${esc(x.desc)}</h2><button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button></div>
+      <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'despesa fixa' : ''].filter(Boolean).join(' · '))}</div>
+      <label>Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
+      ${x.fixo ? '<div class="hint">Muda só o valor deste mês. Para mudar todos os meses seguintes, altere o valor na aba Recorrentes da planilha.</div>' : ''}
+      <label>Descrição</label><input id="eDesc" value="${esc(x.desc)}">
+      <div class="toggle"><span>Pago</span><label class="sw" style="margin:0"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
+      <button class="btn" id="eSalvar">Salvar</button>
+      <div class="btnrow"><button class="dang" data-del="${x.id}" data-compra="${esc(x.compra)}">Excluir lançamento</button></div>`);
+    $('eSalvar').onclick = async () => {
+      const v = parseValor($('eValor').value);
+      if (!(v >= 0)) return toast('Valor inválido.', true);
+      const b = $('eSalvar'); b.disabled = true; b.textContent = 'Salvando…';
+      try {
+        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked });
+        fecharModal(); renderMes(r); toast('Lançamento atualizado.'); S.painelSujo = true;
+        if (r.comp === S.mesAtual) { S.resumo = r; renderHeader(r); renderUltimos(r); }
+      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
+    };
   }
 
   function renderUltimos(r) {
@@ -433,25 +536,25 @@
   function renderMes(r) {
     S.mesVista = r.comp;
     const t = mesNome(r.comp); $('mTitulo').textContent = t[0].toUpperCase() + t.slice(1);
+    S.mesItens = r.itens;
     $('kEnt').textContent = fmt(r.entradas);
     $('kDes').textContent = fmt(r.despesas);
     $('kMar').textContent = fmt(r.mariana);
-    $('kSal').innerHTML = `<span class="${r.saldo < 0 ? 'neg' : 'pos'}">${fmt(r.saldo)}</span>`;
+    $('kInv').textContent = fmt((r.aplicacoes || 0) - (r.resgates || 0));
     $('kConta').innerHTML = `<span class="${r.sobraConta < 0 ? 'neg' : 'pos'}">${fmt(r.sobraConta)}</span>`;
-    $('kVale').textContent = fmt(r.sobraVale);
-    $('cFat').classList.toggle('hidden', !r.faturas.length);
-    $('fats').innerHTML = r.faturas.map(f => `<div class="fat"><div><b>${esc(f.meio)}</b><br>
-      <span class="s" style="color:var(--muted)">${fmt(f.total)}${f.aberto ? ' · em aberto ' + fmt(f.aberto) : ' · paga'}</span></div>
-      ${f.aberto ? `<button data-fat="${esc(f.meio)}">Marcar como paga</button>` : ''}</div>`).join('');
+    $('kAcum').innerHTML = r.saldoInicialDefinido ? `<span class="${r.acumulado < 0 ? 'neg' : 'pos'}">${fmt(r.acumulado)}</span>` : '<span style="font-size:13px;color:var(--muted)">informe o saldo inicial</span>';
+    $('kExpl').innerHTML = `<b>Sobra em conta</b> = entradas + repasse da Mariana − despesas − investido no mês${r.sobraVale ? `, sem contar o que sobrou no vale (${fmt(r.sobraVale)})` : ''}. `
+      + `<b>Saldo previsto na conta</b> = quanto você terá na conta no fim do mês, somando todas as sobras desde o saldo inicial.`
+      + (r.situacao === 'Previsto' ? ' Mês futuro: valores previstos.' : '');
+    $('grupos').innerHTML = grupos(r);
     const max = Math.max(1, ...r.categorias.map(c => c.valor));
     $('cats').innerHTML = r.categorias.length ? r.categorias.map(c => `<div class="bar"><span>${esc(c.cat)}</span><b>${fmt(c.valor)}</b>
       <div class="track"><div class="fill" style="width:${Math.max(2, c.valor / max * 100)}%"></div></div></div>`).join('')
       : '<div class="s">Sem despesas neste mês.</div>';
-    $('lista').innerHTML = r.itens.length ? r.itens.map(x => itemHtml(x, true)).join('') : '<div class="s">Sem lançamentos.</div>';
   }
 
   async function abrirMes(iso) {
-    $('lista').innerHTML = '<div class="loading">Carregando…</div>';
+    $('grupos').innerHTML = '<div class="loading">Carregando…</div>';
     try { renderMes(await run('getMonthSummary', iso)); } catch (e) { toast(e.message, true); }
   }
 
@@ -480,7 +583,7 @@
     if (b.dataset.del) {
       const todas = !!b.dataset.compra && confirm('Esta compra é parcelada. Excluir TODAS as parcelas?');
       if (!todas && !confirm(b.dataset.compra ? 'Excluir só esta parcela?' : 'Excluir este lançamento?')) return;
-      try { const r = await run('deleteTransaction', b.dataset.del, !!todas); toast(r.removidos + ' lançamento(s) excluído(s).'); S.painelSujo = true; abrirMes(S.mesVista); recarregarAtual(); }
+      try { const r = await run('deleteTransaction', b.dataset.del, !!todas); fecharModal(); toast(r.removidos + ' lançamento(s) excluído(s).'); S.painelSujo = true; abrirMes(S.mesVista); recarregarAtual(); }
       catch (er) { toast(er.message, true); }
       return;
     }
@@ -520,7 +623,7 @@
     S.painel = d; S.painelSujo = false;
     const m = d.mes || { ent: 0, des: 0, mar: 0, saldo: 0, acum: 0 };
     const hist = d.ultimos12.map(r => ({ comp: r.comp, entra: r.ent + r.mar, sai: r.des, atual: r.comp + '-01' === d.atual }));
-    const prev = d.proximos6.map(r => ({ comp: r.comp, saldo: r.saldo }));
+    const prev = d.proximos6.map(r => ({ comp: r.comp, saldo: r.conta }));
     const media6 = d.ultimos12.filter(r => r.comp + '-01' < d.atual).slice(-6);
     const mediaDes = media6.length ? media6.reduce((s, r) => s + r.des, 0) / media6.length : 0;
     const varDes = mediaDes ? (m.des - mediaDes) / mediaDes : 0;
@@ -528,7 +631,7 @@
 
     $('painel').innerHTML = `
       <div class="kpis" style="margin-bottom:12px">
-        <div class="kpi"><small>Saldo de ${MESES[Number(d.atual.slice(5, 7)) - 1]}</small><b class="${m.saldo < 0 ? 'neg' : 'pos'}">${fmt(m.saldo)}</b></div>
+        <div class="kpi"><small>Sobra em conta em ${MESES[Number(d.atual.slice(5, 7)) - 1]}</small><b class="${m.conta < 0 ? 'neg' : 'pos'}">${fmt(m.conta)}</b></div>
         <div class="kpi"><small>Despesas vs média 6m</small><b class="${varDes > 0 ? 'up' : 'down'}">${varDes > 0 ? '+' : ''}${Math.round(varDes * 100)}%</b></div>
         <div class="kpi"><small>Poupança em ${d.ano.ano}</small><b class="${d.ano.poupanca < 0 ? 'neg' : 'pos'}">${(d.ano.poupanca * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</b></div>
         <div class="kpi"><small>Parcelas a vencer</small><b>${fmt0(d.parcelasTotal)}</b></div>
@@ -539,7 +642,7 @@
         <div class="legend"><span><i style="background:var(--c-ent)"></i>Entradas + repasse da Mariana</span><span><i style="background:var(--c-des)"></i>Despesas</span></div>
       </div>
 
-      ${prev.length ? `<div class="card"><h3>Saldo previsto, próximos meses</h3>
+      ${prev.length ? `<div class="card"><h3>Sobra em conta prevista, próximos meses</h3>
         ${colunas(prev, [{ key: 'saldo', cor: v => v < 0 ? 'var(--c-des)' : 'var(--c-ent)', nome: 'Saldo previsto' }], { rotulos: true })}
         <div class="s" style="font-size:12px;color:var(--muted);margin-top:4px">Fixos da aba Recorrentes + parcelas já lançadas. Gastos do dia a dia ainda não entram.</div>
       </div>` : ''}
@@ -582,9 +685,9 @@
         <div class="rowv"><span>Entradas</span><b>${fmt(d.ano.entradas)}</b></div>
         <div class="rowv"><span>Repasse da Mariana</span><b>${fmt(d.ano.mariana)}</b></div>
         <div class="rowv"><span>Despesas</span><b>${fmt(d.ano.despesas)}</b></div>
-        <div class="rowv"><span>Saldo até agora</span><b class="${d.ano.saldoRealizado < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldoRealizado)}</b></div>
-        <div class="rowv"><span>Saldo previsto no fim do ano</span><b class="${d.ano.saldo < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldo)}</b></div>
-        <div class="rowv"><span>Saldo acumulado (desde fev/2025)</span><b class="${m.acum < 0 ? 'neg' : 'pos'}">${fmt(m.acum)}</b></div>
+        <div class="rowv"><span>Resultado do ano até agora</span><b class="${d.ano.saldoRealizado < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldoRealizado)}</b></div>
+        <div class="rowv"><span>Resultado previsto do ano</span><b class="${d.ano.saldo < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldo)}</b></div>
+        <div class="rowv"><span>Saldo previsto na conta (fim do mês)</span><b class="${m.acum < 0 ? 'neg' : 'pos'}">${fmt(m.acum)}</b></div>
       </div>`;
   }
 
@@ -722,7 +825,7 @@
         <div><label>Data</label><input id="mData" type="date" value="${m ? m.data : S.init.hoje}"></div>
         <div id="boxQtd"><label>Quantidade</label><input id="mQtd" type="number" inputmode="decimal" min="0" step="any" value="${m && m.qtd ? m.qtd : ''}"></div>
       </div>
-      <label id="lblValor">Valor (R$)</label><input id="mValor" class="valor" inputmode="decimal" placeholder="0,00" value="${m ? String(m.valor).replace('.', ',') : ''}">
+      <label id="lblValor">Valor (R$)</label><input id="mValor" class="valor moeda" inputmode="numeric" placeholder="0,00" value="${m ? num2(m.valor) : ''}">
       ${a.titular === 'Conjunta' ? `<label>Quem colocou o dinheiro</label>
         <div class="seg" id="mQuem" style="grid-template-columns:1fr 1fr">
           <button data-q="Eu" class="${!m || m.quem !== S.inv.esposa ? 'on' : ''}">Eu</button>
@@ -764,7 +867,7 @@
   function formMeta() {
     const r = S.inv.reserva;
     abrirModal(`${hd('Meta da reserva')}
-      <label>Meta (R$)</label><input id="metaV" class="valor" inputmode="decimal" value="${r.meta ? String(r.meta).replace('.', ',') : ''}" placeholder="0,00">
+      <label>Meta (R$)</label><input id="metaV" class="valor moeda" inputmode="numeric" value="${r.meta ? num2(r.meta) : ''}" placeholder="0,00">
       <div class="hint">Referência comum: de 3 a 6 meses do custo de vida de vocês dois.</div>
       <button class="btn" id="metaS">Salvar meta</button>`);
     $('metaS').onclick = async () => {
@@ -787,6 +890,7 @@
   $('mNext').onclick = () => abrirMes(addMes(S.mesVista, 1));
   ['fValor', 'fParc', 'fMeio', 'fData', 'fModo', 'fPct', 'fDiv'].forEach(id => $(id).addEventListener('input', atualizarHint));
   $('fDiv').addEventListener('change', atualizarHint);
+  $('fFixo').addEventListener('change', atualizarHint);
   $('fDesc').addEventListener('change', aplicarSugestao);
 
   $('btnCfg').onclick = () => telaConfig();
