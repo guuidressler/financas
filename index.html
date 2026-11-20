@@ -28,7 +28,7 @@
   header .gear { position: absolute; right: 12px; top: calc(14px + env(safe-area-inset-top)); border: 0; background: rgba(255,255,255,.12);
     color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 17px; }
   @media (prefers-color-scheme: dark) { header { background: #1a2740; } }
-  header .lbl { font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
+  header .lbl { padding-right: 46px; font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
   header .big { font-size: 28px; font-weight: 700; margin-top: 2px; }
   header .row { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; opacity: .92; flex-wrap: wrap; }
   main { padding: 12px 16px; max-width: 560px; margin: 0 auto; }
@@ -77,6 +77,15 @@
   .cardsub:first-of-type { border-top: 0; padding-top: 0; }
   .cardsub button { border: 0; background: var(--chip); color: var(--brand); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 12px; }
   .item.prev { opacity: .6; }
+  header .mesbtn { margin-top: 6px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; border-radius: 20px;
+    padding: 4px 12px; font-size: 12px; font-weight: 600; }
+  .pessoa { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+  .pessoa .nm { font-weight: 700; }
+  .pessoa .vl { font-weight: 800; font-size: 18px; text-align: right; }
+  .pessoa .sb { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .split { display: flex; gap: 8px; margin-top: 8px; }
+  .split > div { flex: 1; background: var(--chip); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
+  .split b { display: block; font-size: 15px; color: var(--ink); }
   .item .main { cursor: pointer; }
   .bar { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 14px; margin: 8px 0; }
   .bar .track { grid-column: 1 / -1; height: 6px; background: var(--chip); border-radius: 6px; overflow: hidden; }
@@ -152,6 +161,7 @@
   <div class="big" id="hSaldo">R$ –</div>
   <div class="row"><span id="hEnt"></span><span id="hDes"></span><span id="hMar"></span></div>
   <div class="row" style="margin-top:4px"><span id="hConta"></span></div>
+  <button class="mesbtn hidden" id="btnMesHdr"></button>
 </header>
 
 <main>
@@ -206,7 +216,7 @@
       <div id="ultCartao" class="loading">Carregando…</div>
     </div>
     <div class="card">
-      <div class="grp-h"><h3 id="tFixas">Despesas fixas do mês</h3><b id="totFixas"></b></div>
+      <div class="grp-h"><h3 id="tFixas">Fixas e salário do mês</h3><b id="totFixas"></b></div>
       <div class="grp-sub" id="subFixas"></div>
       <div id="ultFixas" class="loading">Carregando…</div>
     </div>
@@ -222,7 +232,7 @@
     <div class="kpis" style="margin-bottom:12px">
       <div class="kpi"><small>Entradas</small><b id="kEnt"></b></div>
       <div class="kpi"><small>Despesas</small><b id="kDes"></b></div>
-      <div class="kpi"><small>Mariana repassa</small><b id="kMar"></b></div>
+      <div class="kpi"><small>Mariana transfere</small><b id="kMar"></b></div>
       <div class="kpi"><small>Investido no mês</small><b id="kInv"></b></div>
       <div class="kpi"><small>Sobra em conta no mês</small><b id="kConta"></b></div>
       <div class="kpi"><small>Saldo previsto na conta</small><b id="kAcum"></b></div>
@@ -429,11 +439,14 @@
 
   function renderHeader(r) {
     const mes = MESES[Number(r.comp.slice(5, 7)) - 1];
-    $('hMes').textContent = 'Quanto sobra em ' + mes;
+    $('hMes').textContent = 'Quanto sobra em ' + mes + (r.comp === S.mesFoco && S.mesFoco !== S.mesHoje ? ' (próxima fatura)' : '');
     $('hSaldo').textContent = fmt(r.sobraConta);
     $('hEnt').textContent = 'Entradas ' + fmt(r.entradas);
     $('hDes').textContent = 'Despesas ' + fmt(r.despesas);
-    $('hMar').textContent = 'Mariana repassa ' + fmt(r.mariana);
+    $('hMar').textContent = (r.esposa || 'Mariana') + ' transfere ' + fmt(r.repasseLiquido !== undefined ? r.repasseLiquido : r.mariana);
+    const outro = S.mesAtual === S.mesFoco ? S.mesHoje : S.mesFoco;
+    $('btnMesHdr').classList.toggle('hidden', S.mesFoco === S.mesHoje);
+    $('btnMesHdr').textContent = 'Ver ' + MESES[Number(outro.slice(5, 7)) - 1];
     $('hConta').innerHTML = (r.saldoInicialDefinido
         ? `Saldo previsto na conta no fim de ${mes}: <b>${fmt(r.acumulado)}</b>`
         : `Para ver o saldo da sua conta, informe o saldo inicial na planilha (aba Config).`)
@@ -470,7 +483,7 @@
     let html = '';
     if (rec.length) html += card('Entradas', '', soma(rec), rec.map(x => itemHtml(x, true)).join(''));
     if (fixas.length) {
-      const aberto = soma(fixas.filter(x => !x.pago));
+      const aberto = soma(fixas.filter(x => !x.pago && x.meio !== 'Abatido do repasse'));
       html += card('Despesas fixas', aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo para marcar como paga.` : 'Todas pagas.', soma(fixas),
         fixas.map(x => itemHtml(x, true)).join(''));
     } else if (r.fixosPrevistos && r.fixosPrevistos.length) {
@@ -478,9 +491,10 @@
       if (prevRec.length && !rec.length) html += card('Entradas (previstas)', 'Ainda não lançadas neste mês.', soma(prevRec),
         prevRec.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">dia ${x.dia}</div></div><div class="v rec">+${fmt(x.valor)}</div></div>`).join(''));
       const prev = r.fixosPrevistos.filter(x => x.tipo === 'Despesa');
-      html += card('Despesas fixas (previstas)', 'Ainda não lançadas neste mês. Entram sozinhas no dia 1º (ou pelo menu Painel da planilha).',
+      html += card('Despesas fixas (previstas)', 'Ainda não lançadas neste mês. Lance a provisão para poder ajustar os valores.',
         soma(prev), prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
-          <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join(''));
+          <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('')
+        + `<div class="btnrow"><button class="pri" onclick="lancarProvisao('${r.comp}')">Lançar provisão de ${MESES[Number(r.comp.slice(5, 7)) - 1]}</button></div>`);
     }
     if (cartao.length) {
       const porCartao = {};
@@ -495,16 +509,25 @@
     if (avulsas.length) html += card('Pix, débito e dinheiro', '', soma(avulsas), avulsas.map(x => itemHtml(x, true)).join(''));
     if (vale.length) html += card('Vale-alimentação', '', soma(vale), vale.map(x => itemHtml(x, true, true)).join(''));
     if (acertos.length) html += card('A receber da Mariana (avulsos)', '', acertos.reduce((s, x) => s + x.mariana, 0), acertos.map(x => itemHtml(x, true, true)).join(''));
+    if (r.mariana || r.abatimentos) {
+      const ab = it.filter(x => x.tipo === 'Despesa' && x.meio === 'Abatido do repasse');
+      html += card('Repasse da ' + esc(r.esposa || 'Mariana'), 'Contas que você paga abatendo do que ela te repassa (luz, internet...).', r.repasseLiquido,
+        `<div class="rowv"><span>Ela te deve no mês</span><b>${fmt(r.mariana)}</b></div>`
+        + ab.map(x => `<div class="rowv"><span>− ${esc(x.desc)}</span><b>${fmt(x.valor)}</b></div>`).join('')
+        + `<div class="rowv"><span><b>Ela transfere</b></span><b>${fmt(r.repasseLiquido)}</b></div>`);
+    }
     return html || '<div class="card"><div class="s">Sem lançamentos neste mês.</div></div>';
   }
 
   function editarItem(id) {
-    const x = (S.mesItens || []).find(i => i.id === id); if (!x) return;
+    const fontes = [].concat(S.mesItens || [], (S.resumo && S.resumo.itens) || [], (S.resumoProx && S.resumoProx.itens) || []);
+    const x = fontes.find(i => i.id === id); if (!x) return;
     const valor = x.cat === 'Acerto Mariana' ? x.mariana : Math.abs(x.valor);
     abrirModal(`<div class="hd"><h2>${esc(x.desc)}</h2><button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button></div>
       <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'despesa fixa' : ''].filter(Boolean).join(' · '))}</div>
       <label>Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
-      ${x.fixo ? '<div class="hint">Muda só o valor deste mês. Para mudar todos os meses seguintes, altere o valor na aba Recorrentes da planilha.</div>' : ''}
+      ${x.fixo ? `<div class="toggle"><span>Usar este valor nos próximos meses</span><label class="sw" style="margin:0"><input type="checkbox" id="ePadrao"><i></i></label></div>
+        <div class="hint">Desligado: muda só este mês (ex.: provisão do aluguel ajustada no fim do mês). Ligado: vira o novo valor padrão.</div>` : ''}
       <label>Descrição</label><input id="eDesc" value="${esc(x.desc)}">
       <div class="toggle"><span>Pago</span><label class="sw" style="margin:0"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
       <button class="btn" id="eSalvar">Salvar</button>
@@ -514,9 +537,12 @@
       if (!(v >= 0)) return toast('Valor inválido.', true);
       const b = $('eSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
-        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked });
-        fecharModal(); renderMes(r); toast('Lançamento atualizado.'); S.painelSujo = true;
-        if (r.comp === S.mesAtual) { S.resumo = r; renderHeader(r); renderUltimos(r); }
+        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked,
+          atualizarPadrao: !!($('ePadrao') && $('ePadrao').checked) });
+        fecharModal(); toast('Lançamento atualizado.'); S.painelSujo = true;
+        if (S.mesVista === r.comp) renderMes(r);
+        if (r.comp === S.mesAtual) { renderHeader(r); renderUltimos(r); }
+        else if (r.comp === addMes(S.mesAtual, 1)) renderUltimos(null, r);
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
   }
@@ -543,23 +569,29 @@
     $('ultCartao').innerHTML = cartao.length ? cartao.map(linhaCartao).join('') : '<div class="s" style="color:var(--muted)">Nenhuma compra no cartão ainda.</div>';
 
     const fixas = r.itens.filter(x => x.fixo && x.tipo === 'Despesa');
+    const entradasFixas = r.itens.filter(x => x.fixo && x.tipo === 'Receita');
     $('ultFixas').className = '';
     if (fixas.length) {
-      const total = fixas.reduce((s, x) => s + x.valor, 0), aberto = fixas.filter(x => !x.pago).reduce((s, x) => s + x.valor, 0);
-      $('tFixas').textContent = 'Despesas fixas de ' + MESES[Number(r.comp.slice(5, 7)) - 1];
+      const total = fixas.reduce((s, x) => s + x.valor, 0), aberto = fixas.filter(x => !x.pago && x.meio !== 'Abatido do repasse').reduce((s, x) => s + x.valor, 0);
+      $('tFixas').textContent = 'Fixas e salário de ' + MESES[Number(r.comp.slice(5, 7)) - 1];
       $('totFixas').textContent = fmt(total);
       $('subFixas').textContent = aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo quando pagar.` : 'Todas pagas.';
-      $('ultFixas').innerHTML = fixas.sort((a, b) => a.pago - b.pago).map(x => `<div class="item">
+      $('ultFixas').innerHTML = entradasFixas.map(x => `<div class="item"><div class="main" onclick="editarItem('${x.id}')"><div class="t">${esc(x.desc)}</div>
+          <div class="s">entrada · toque para ajustar</div></div><div class="v rec">+${fmt(x.valor)}</div></div>`).join('')
+        + fixas.sort((a, b) => a.pago - b.pago).map(x => `<div class="item">
         <button class="dot${x.pago ? ' on' : ''}" data-pago="${x.id}" aria-label="Pago"></button>
-        <div class="main"><div class="t">${esc(x.desc)}</div><div class="s">${esc(x.cat)}</div></div>
-        <div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('');
+        <div class="main" onclick="editarItem('${x.id}')"><div class="t">${esc(x.desc)}</div><div class="s">${esc(x.meio === 'Abatido do repasse' ? 'abatido do repasse' : x.cat)}</div></div>
+        <div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('')
+        + `<div class="btnrow"><button onclick="telaRecorrentes()">Valores padrão</button></div>`;
     } else {
       const prev = (r.fixosPrevistos || []).filter(x => x.tipo === 'Despesa');
       $('totFixas').textContent = prev.length ? fmt(prev.reduce((s, x) => s + x.valor, 0)) : '';
       $('subFixas').textContent = prev.length ? 'Previstas: ainda não lançadas neste mês.' : '';
-      $('ultFixas').innerHTML = prev.length ? prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
+      $('ultFixas').innerHTML = (prev.length ? prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
         <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}</div></div>`).join('')
-        : '<div class="s" style="color:var(--muted)">Nenhuma despesa fixa cadastrada.</div>';
+        + `<div class="btnrow"><button class="pri" onclick="lancarProvisao('${r.comp}')">Lançar provisão para ajustar valores</button></div>`
+        : '<div class="s" style="color:var(--muted)">Nenhuma despesa fixa cadastrada.</div>')
+        + `<div class="btnrow"><button onclick="telaRecorrentes()">Valores padrão</button></div>`;
     }
   }
 
@@ -569,14 +601,14 @@
     S.mesItens = r.itens;
     $('kEnt').textContent = fmt(r.entradas);
     $('kDes').textContent = fmt(r.despesas);
-    $('kMar').textContent = fmt(r.mariana);
+    $('kMar').textContent = fmt(r.repasseLiquido !== undefined ? r.repasseLiquido : r.mariana);
     $('kInv').textContent = fmt((r.aplicacoes || 0) - (r.resgates || 0));
     $('kConta').innerHTML = `<span class="${r.sobraConta < 0 ? 'neg' : 'pos'}">${fmt(r.sobraConta)}</span>`;
     $('kAcum').innerHTML = r.saldoInicialDefinido ? `<span class="${r.acumulado < 0 ? 'neg' : 'pos'}">${fmt(r.acumulado)}</span>` : '<span style="font-size:13px;color:var(--muted)">informe o saldo inicial</span>';
     $('kExpl').innerHTML = `<b>Sobra em conta</b> = entradas + repasse da Mariana − despesas − investido no mês${r.sobraVale ? `, sem contar o que sobrou no vale (${fmt(r.sobraVale)})` : ''}. `
       + `<b>Saldo previsto na conta</b> = quanto você terá na conta no fim do mês, somando todas as sobras desde o saldo inicial.`
       + (r.situacao === 'Previsto' ? ' Mês futuro: valores previstos.' : '');
-    $('grupos').innerHTML = grupos(r);
+    $('grupos').innerHTML = grupos(r) + `<div class="btnrow" style="margin:-4px 0 12px"><button onclick="telaRecorrentes()">Fixas e salário: valores padrão</button></div>`;
     const max = Math.max(1, ...r.categorias.map(c => c.valor));
     $('cats').innerHTML = r.categorias.length ? r.categorias.map(c => `<div class="bar"><span>${esc(c.cat)}</span><b>${fmt(c.valor)}</b>
       <div class="track"><div class="fill" style="width:${Math.max(2, c.valor / max * 100)}%"></div></div></div>`).join('')
@@ -723,7 +755,7 @@
 
   async function abrirPainel() {
     if (!S.painel) $('painel').innerHTML = '<div class="loading">Carregando…</div>';
-    try { renderPainel(await run('getDashboard')); } catch (e) { toast(e.message, true); }
+    try { renderPainel(await run('getDashboard', S.mesAtual)); } catch (e) { toast(e.message, true); }
   }
 
   // ---------- Investimentos ----------
@@ -739,19 +771,30 @@
 
   function renderInv(d) {
     S.inv = d; S.painelSujo = true;
+    if (d.avisoCdi) toast(d.avisoCdi, true);
+    const esp = d.esposa;
     const ativos = d.ativos.filter(a => a.ativo), inativos = d.ativos.filter(a => !a.ativo);
     const r = d.reserva;
-    const res = d.ativos.filter(a => a.ativo && a.tipo === 'Reserva');
+    const res = ativos.filter(a => a.tipo === 'Reserva');
+    const sub = a => {
+      if (ehBolsa(a.tipo)) {
+        const pm = a.qtd ? a.investido / a.qtd : 0, varp = pm && a.cotacao ? (a.cotacao / pm - 1) : null;
+        return `${a.qtd} ${a.tipo === 'FII' ? 'cotas' : 'ações'}${a.cotacao ? ' · ' + fmt(a.cotacao) : ''}${varp !== null ? ` · <span class="${varp < 0 ? 'neg' : 'pos'}">${varp >= 0 ? '+' : ''}${(varp * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>` : ''}`;
+      }
+      return esc([a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : a.indexador === 'Prefixado' ? num2(a.taxa) + '% a.a.' : '', a.liquidez ? 'liquidez ' + a.liquidez.toLowerCase() : '', a.inst].filter(Boolean).join(' · '));
+    };
     const item = a => `<div class="asset" onclick="abrirAtivo('${a.id}')">
-        <div class="main"><div class="t">${esc(a.nome)}</div>
-          <div class="s"><span class="tag">${esc(a.tipo)}</span>${esc([a.inst, a.titular === 'Conjunta' ? 'conjunta' : ''].filter(Boolean).join(' · '))}</div></div>
+        <div class="main"><div class="t">${esc(a.nome)}${ehBolsa(a.tipo) && a.codigo && a.codigo !== String(a.nome).toUpperCase() ? ' <span class="tag">' + esc(a.codigo) + '</span>' : ''}</div>
+          <div class="s">${sub(a)}</div></div>
         <div class="v">${fmt(a.valor)}<small class="${a.resultado < 0 ? 'neg' : 'pos'}">${a.resultado >= 0 ? '+' : ''}${fmt(a.resultado)}</small></div></div>`;
+    const grupo = (titulo, lista) => lista.length ? `<div class="card"><h3>${titulo}</h3>${lista.map(item).join('')}</div>` : '';
+    const pessoa = (nome, p) => `<div class="kpi pessoa"><span class="nm">${esc(nome)}</span><span class="vl">${fmt(p.valor)}</span>
+      <span class="sb">aplicou ${fmt(p.aplicado)} · rendeu <span class="${p.valor - p.aplicado < 0 ? 'neg' : 'pos'}">${fmt(p.valor - p.aplicado)}</span></span></div>`;
     $('inv').innerHTML = `
-      <div class="kpis" style="margin-bottom:12px">
-        <div class="kpi"><small>Patrimônio investido</small><b>${fmt(d.total)}</b></div>
-        <div class="kpi"><small>Sua parte</small><b>${fmt(d.minhaParte)}</b></div>
-        <div class="kpi"><small>Total aplicado</small><b>${fmt(d.investido)}</b></div>
-        <div class="kpi"><small>Resultado</small><b class="${d.resultado < 0 ? 'neg' : 'pos'}">${fmt(d.resultado)}</b></div>
+      <div style="display:grid;gap:10px;margin-bottom:12px">
+        ${pessoa('Você', d.pessoas.eu)}
+        ${pessoa(esp, d.pessoas.esposa)}
+        <div class="hint" style="margin:0 2px">Total investido pelos dois: <b>${fmt(d.total)}</b>${d.liquido && Math.abs(d.liquido - d.total) > 0.009 ? ` · líquido de IR/IOF estimado: <b>${fmt(d.liquido)}</b>` : ''}</div>
       </div>
 
       <div class="card"><h3>Reserva de emergência</h3>
@@ -760,50 +803,96 @@
             <span style="color:var(--muted);font-size:13px">${r.meta ? 'meta ' + fmt(r.meta) : 'sem meta'}</span></div>
           ${r.meta ? `<div class="prog"><i style="width:${Math.min(100, r.pct * 100)}%"></i></div>
             <div style="font-size:13px;color:var(--muted)">${Math.round(r.pct * 100)}% da meta · faltam ${fmt(Math.max(0, r.meta - r.valor))}</div>` : ''}
-          <div class="rowv" style="margin-top:8px"><span>Você aportou</span><b>${fmt(r.eu)}</b></div>
-          <div class="rowv"><span>${esc(d.esposa)} aportou</span><b>${fmt(r.esposa)}</b></div>
+          <div class="split"><div>Sua parte<b>${fmt(r.euValor)}</b>aplicou ${fmt(r.eu)}</div><div>${esc(esp)}<b>${fmt(r.esposaValor)}</b>aplicou ${fmt(r.esposa)}</div></div>
           <div class="btnrow">
             ${res.length === 1 ? `<button class="pri" onclick="formMov('${res[0].id}','Aplicação')">Aportar</button>
-            <button onclick="formMov('${res[0].id}','Resgate')">Resgatar</button>` : ''}
+            <button onclick="formMov('${res[0].id}','Resgate')">Resgatar</button><button onclick="abrirAtivo('${res[0].id}')">Detalhes</button>` : ''}
             <button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button>
           </div>`
         : `<div style="color:var(--muted);font-size:14px">Cadastre a conta conjunta do C6 para acompanhar a reserva.</div>
-           <div class="btnrow"><button class="pri" onclick="formAtivo(null,{nome:'Reserva de emergência',tipo:'Reserva',inst:'C6',titular:'Conjunta'})">Criar reserva no C6</button>
+           <div class="btnrow"><button class="pri" onclick="formAtivo(null,{nome:'Reserva de emergência',tipo:'Reserva',inst:'C6',titular:'Conjunta',indexador:'CDI',taxa:101.05,liquidez:'Diária'})">Criar reserva no C6</button>
            <button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button></div>`}
       </div>
 
-      <div class="card"><h3>Seus ativos</h3>
-        ${ativos.length ? ativos.map(item).join('') : '<div style="color:var(--muted);font-size:14px">Nenhum ativo cadastrado.</div>'}
-        <div class="btnrow"><button class="pri" onclick="formAtivo()">+ Novo ativo</button></div>
-      </div>
-      ${inativos.length ? `<div class="card"><h3>Encerrados</h3>${inativos.map(item).join('')}</div>` : ''}`;
+      ${grupo('Seus investimentos', ativos.filter(a => a.titular === 'Eu'))}
+      ${grupo('Conjuntos', ativos.filter(a => a.titular === 'Conjunta' && a.tipo !== 'Reserva'))}
+      ${grupo('Da ' + esc(esp), ativos.filter(a => a.titular === esp))}
+      <div class="btnrow" style="margin-bottom:12px"><button class="pri" onclick="formAtivo()">+ Novo investimento</button></div>
+      ${grupo('Encerrados', inativos)}`;
   }
 
   function formAtivo(id, pre) {
-    const a = id ? S.inv.ativos.find(x => x.id === id) : Object.assign({ nome: '', tipo: 'Renda fixa', inst: '', titular: 'Eu', codigo: '', ativo: true }, pre || {});
-    abrirModal(`${hd(id ? 'Editar ativo' : 'Novo ativo')}
-      <label>Nome</label><input id="aNome" value="${esc(a.nome)}" placeholder="Ex.: CDB C6 110% CDI">
+    const esp = S.inv.esposa;
+    const a = id ? S.inv.ativos.find(x => x.id === id) : Object.assign({ nome: '', tipo: 'Renda fixa', inst: '', titular: 'Eu', codigo: '', ativo: true,
+      indexador: 'CDI', taxa: 100, liquidez: 'Diária', vencimento: '', isentoIR: false }, pre || {});
+    const opt = (v, atual, rot) => `<option value="${esc(v)}"${v === atual ? ' selected' : ''}>${esc(rot || v)}</option>`;
+    abrirModal(`${hd(id ? 'Editar investimento' : 'Novo investimento')}
       <div class="two">
-        <div><label>Tipo</label><select id="aTipo">${TIPOS.map(t => `<option${t === a.tipo ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
-        <div><label>Titular</label><select id="aTit"><option${a.titular === 'Eu' ? ' selected' : ''}>Eu</option><option${a.titular === 'Conjunta' ? ' selected' : ''}>Conjunta</option></select></div>
+        <div><label>Tipo</label><select id="aTipo">${TIPOS.map(t => opt(t, a.tipo)).join('')}</select></div>
+        <div><label>De quem é</label><select id="aTit">${opt('Eu', a.titular, 'Meu')}${opt('Conjunta', a.titular, 'Conjunta')}${opt(esp, a.titular, 'Da ' + esp)}</select></div>
       </div>
-      <label>Instituição</label><input id="aInst" value="${esc(a.inst)}" placeholder="Ex.: C6, XP, Inter">
-      <div id="boxCod"><label>Código na bolsa</label><input id="aCod" value="${esc(a.codigo)}" placeholder="Ex.: PETR4, HGLG11" autocapitalize="characters">
-        <div class="hint">A cotação é buscada automaticamente pelo Google Finance.</div></div>
-      ${id ? `<div class="toggle"><span>Ativo em carteira</span><label class="sw" style="margin:0"><input type="checkbox" id="aOn"${a.ativo ? ' checked' : ''}><i></i></label></div>
-        <div class="hint">Desligue quando encerrar o investimento: o histórico fica guardado, mas sai dos totais.</div>` : ''}
+      <div id="boxCod"><label>Código na B3</label><input id="aCod" value="${esc(a.codigo)}" placeholder="Ex.: PETR4, ITSA4, HGLG11" autocapitalize="characters" autocomplete="off">
+        <div class="hint">O valor de mercado é atualizado sozinho pelo Google Finance (com cerca de 20 min de atraso).</div></div>
+      <label>Nome</label><input id="aNome" value="${esc(a.nome)}" placeholder="Ex.: CDB C6, Petrobras">
+      <label>Instituição / corretora</label><input id="aInst" value="${esc(a.inst)}" placeholder="Ex.: C6, XP, Inter">
+      <div id="boxRF">
+        <div class="two">
+          <div><label>Rentabilidade</label><select id="aIdx">${opt('CDI', a.indexador, '% do CDI')}${opt('Prefixado', a.indexador, 'Prefixado (% a.a.)')}${opt('Manual', a.indexador || 'Manual', 'Atualizo o saldo')}</select></div>
+          <div id="boxTaxa"><label id="lblTaxa">Taxa</label><input id="aTaxa" class="moeda" inputmode="numeric" value="${a.taxa ? num2(a.taxa) : ''}" placeholder="101,05"></div>
+        </div>
+        <div class="two">
+          <div><label>Liquidez</label><select id="aLiq">${opt('Diária', a.liquidez)}${opt('No vencimento', a.liquidez)}</select></div>
+          <div><label>Vencimento (opcional)</label><input id="aVenc" type="date" value="${a.vencimento || ''}"></div>
+        </div>
+        <div class="toggle"><span>Isento de IR (LCI, LCA, poupança)</span><label class="sw" style="margin:0"><input type="checkbox" id="aIsento"${a.isentoIR ? ' checked' : ''}><i></i></label></div>
+        <div class="hint" id="hintRF"></div>
+      </div>
+      ${!id ? `<div id="boxCompra"><div class="card" style="margin-top:12px"><h3>Primeira compra</h3>
+        <div class="two"><div><label>Data</label><input id="cData" type="date" value="${S.init.hoje}"></div>
+          <div><label>Quantidade</label><input id="cQtd" type="number" inputmode="numeric" min="1" step="1"></div></div>
+        <label>Preço pago por ação (R$)</label><input id="cPreco" class="valor moeda" inputmode="numeric" placeholder="0,00">
+        <div class="hint" id="cTot"></div></div></div>` : ''}
+      ${id ? `<div class="toggle"><span>Em carteira</span><label class="sw" style="margin:0"><input type="checkbox" id="aOn"${a.ativo ? ' checked' : ''}><i></i></label></div>
+        <div class="hint">Desligue quando encerrar: o histórico fica guardado, mas sai dos totais.</div>` : ''}
       <button class="btn" id="aSalvar">Salvar</button>
-      ${id ? `<div class="btnrow"><button class="dang" onclick="excluirAtivo('${id}')">Excluir ativo e histórico</button></div>` : ''}`);
-    const sync = () => $('boxCod').classList.toggle('hidden', !ehBolsa($('aTipo').value));
-    $('aTipo').onchange = sync; sync();
+      ${id ? `<div class="btnrow"><button class="dang" onclick="excluirAtivo('${id}')">Excluir investimento e histórico</button></div>` : ''}`);
+    const sync = () => {
+      const bolsa = ehBolsa($('aTipo').value), idx = $('aIdx').value;
+      $('boxCod').classList.toggle('hidden', !bolsa);
+      $('boxRF').classList.toggle('hidden', bolsa);
+      if ($('boxCompra')) $('boxCompra').classList.toggle('hidden', !bolsa);
+      $('boxTaxa').classList.toggle('hidden', idx === 'Manual');
+      $('lblTaxa').textContent = idx === 'CDI' ? 'Taxa (% do CDI)' : 'Taxa (% ao ano)';
+      $('hintRF').textContent = idx === 'Manual' ? 'O valor acompanha o saldo que você informar em "Atualizar saldo".'
+        : 'O rendimento é calculado todo dia com o CDI oficial do Banco Central' + (idx === 'Prefixado' ? ' (dias úteis)' : '') + ', já mostrando o IR'
+          + ($('aIsento').checked ? '' : ' regressivo (22,5% a 15%)') + ' e o IOF dos primeiros 30 dias. É uma estimativa: confira com o banco de vez em quando com "Atualizar saldo".';
+      if ($('cTot')) { const q = Number($('cQtd').value) || 0, p = parseValor($('cPreco').value) || 0; $('cTot').textContent = q && p ? 'Total: ' + fmt(q * p) : ''; }
+    };
+    ['aTipo', 'aIdx', 'aIsento'].forEach(k => $(k).addEventListener('change', sync));
+    if ($('cQtd')) { $('cQtd').addEventListener('input', sync); $('cPreco').addEventListener('input', sync); }
+    $('aCod').addEventListener('input', () => { if (!id && !$('aNome').dataset.edit) $('aNome').value = $('aCod').value.toUpperCase(); });
+    $('aNome').addEventListener('input', () => $('aNome').dataset.edit = '1');
+    sync();
     $('aSalvar').onclick = async () => {
+      const bolsa = ehBolsa($('aTipo').value);
+      const nome = ($('aNome').value || $('aCod').value).trim();
+      const q = $('cQtd') ? Number($('cQtd').value) || 0 : 0, p = $('cPreco') ? parseValor($('cPreco').value) || 0 : 0;
+      if (!id && bolsa && !$('aCod').value.trim()) return toast('Informe o código na B3.', true);
+      if (!id && bolsa && (!q || !p)) return toast('Informe a quantidade e o preço da primeira compra.', true);
       const b = $('aSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
-        const d = await run('saveAsset', { id: id || '', nome: $('aNome').value, tipo: $('aTipo').value, inst: $('aInst').value,
-          titular: $('aTit').value, codigo: $('aCod').value, ativo: id ? $('aOn').checked : true });
-        renderInv(d); toast('Ativo salvo.');
-        const novo = id ? d.ativos.find(x => x.id === id) : d.ativos.filter(x => x.nome === $('aNome').value.trim()).pop();
-        if (novo) abrirAtivo(novo.id); else fecharModal();
+        let d = await run('saveAsset', { id: id || '', nome, tipo: $('aTipo').value, inst: $('aInst').value, titular: $('aTit').value,
+          codigo: $('aCod').value, ativo: id ? $('aOn').checked : true, indexador: $('aIdx').value, taxa: parseValor($('aTaxa').value) || 0,
+          liquidez: $('aLiq').value, vencimento: $('aVenc').value, isentoIR: $('aIsento').checked });
+        const novo = id ? d.ativos.find(x => x.id === id) : d.ativos.filter(x => x.nome === nome).pop();
+        let movs;
+        if (!id && bolsa && novo) {
+          const r = await run('saveMov', { ativoId: novo.id, op: 'Compra', data: $('cData').value, valor: Math.round(q * p * 100) / 100, qtd: q,
+            quem: $('aTit').value === S.inv.esposa ? S.inv.esposa : 'Eu' });
+          d = r.inv; movs = r.movs;
+        }
+        renderInv(d); toast('Investimento salvo.');
+        if (novo) abrirAtivo(novo.id, movs); else fecharModal();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
   }
@@ -820,17 +909,21 @@
     const ops = ehBolsa(a.tipo) ? S.inv.opsBolsa : S.inv.opsOutros;
     const rot = { 'Compra': 'Comprar', 'Venda': 'Vender', 'Provento': 'Provento', 'Aplicação': 'Aplicar', 'Resgate': 'Resgatar', 'Atualização de saldo': 'Atualizar saldo' };
     abrirModal(`${hd(a.nome)}
-      <div class="s" style="color:var(--muted);margin-bottom:10px"><span class="tag">${esc(a.tipo)}</span>${esc([a.inst, a.titular === 'Conjunta' ? 'conta conjunta' : ''].filter(Boolean).join(' · '))}</div>
+      <div class="s" style="color:var(--muted);margin-bottom:10px"><span class="tag">${esc(a.tipo)}</span>${esc([a.codigo, a.inst, a.titular === 'Conjunta' ? 'conjunta' : a.titular === S.inv.esposa ? 'da ' + S.inv.esposa : '',
+        a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : a.indexador === 'Prefixado' ? num2(a.taxa) + '% a.a.' : '', a.liquidez ? 'liquidez ' + a.liquidez.toLowerCase() : '',
+        a.vencimento ? 'vence ' + a.vencimento.split('-').reverse().join('/') : '', a.isentoIR ? 'isento de IR' : ''].filter(Boolean).join(' · '))}</div>
       <div class="kpis">
-        <div class="kpi"><small>Valor atual</small><b>${fmt(a.valor)}</b></div>
-        <div class="kpi"><small>Resultado</small><b class="${a.resultado < 0 ? 'neg' : 'pos'}">${fmt(a.resultado)}</b></div>
-        <div class="kpi"><small>Aplicado líquido</small><b>${fmt(a.investido)}</b></div>
-        ${ehBolsa(a.tipo) ? `<div class="kpi"><small>${a.qtd} cotas · cotação</small><b>${a.cotacao ? fmt(a.cotacao) : '–'}</b></div>`
-          : a.titular === 'Conjunta' ? `<div class="kpi"><small>Sua parte (${Math.round(a.minhaPct * 100)}%)</small><b>${fmt(a.minhaParte)}</b></div>`
+        <div class="kpi"><small>${ehBolsa(a.tipo) ? 'Valor de mercado' : a.estimado ? 'Valor bruto (estimado)' : 'Valor atual'}</small><b>${fmt(a.valor)}</b></div>
+        <div class="kpi"><small>Rendimento</small><b class="${a.resultado < 0 ? 'neg' : 'pos'}">${fmt(a.resultado)}</b></div>
+        <div class="kpi"><small>Aplicado</small><b>${fmt(a.investido)}</b></div>
+        ${ehBolsa(a.tipo) ? `<div class="kpi"><small>${a.qtd} × cotação</small><b>${a.cotacao ? fmt(a.cotacao) : '–'}</b></div>`
+          : a.estimado ? `<div class="kpi"><small>Se resgatar hoje (líquido)</small><b>${fmt(a.liquido)}</b></div>`
           : `<div class="kpi"><small>Saldo atualizado em</small><b style="font-size:15px">${a.atualizado ? a.atualizado.split('-').reverse().join('/') : 'nunca'}</b></div>`}
       </div>
-      ${!ehBolsa(a.tipo) ? '<div class="hint">Para o valor acompanhar o rendimento, use "Atualizar saldo" com o saldo do app do banco (uma vez por mês basta).</div>' : ''}
-      ${ehBolsa(a.tipo) && !a.cotacao && a.qtd ? '<div class="hint">Sem cotação automática para este código. Use o código exato da B3.</div>' : ''}
+      ${a.estimado ? `<div class="hint">Estimativa de ${a.estimadoEm ? a.estimadoEm.split('-').reverse().join('/') : 'hoje'}: IR ${fmt(a.ir)}${a.iof ? ' · IOF ' + fmt(a.iof) : ''}. Para corrigir pelo valor exato do banco, use "Atualizar saldo".</div>` : ''}
+      ${!ehBolsa(a.tipo) && !a.estimado ? '<div class="hint">Para o valor acompanhar o rendimento, use "Atualizar saldo" com o saldo do app do banco, ou edite o investimento e informe a taxa.</div>' : ''}
+      ${ehBolsa(a.tipo) && !a.cotacao && a.qtd ? '<div class="hint">Sem cotação automática para este código. Confira se é o código exato da B3 (ex.: PETR4).</div>' : ''}
+      ${a.titular === 'Conjunta' ? `<div class="split"><div>Sua parte<b>${fmt(a.eu)}</b>aplicou ${fmt(a.aplicadoEu)}</div><div>${esc(S.inv.esposa)}<b>${fmt(a.esposa)}</b>aplicou ${fmt(a.aplicadoEsposa)}</div></div>` : ''}
       <div class="btnrow">${ops.map((o, i) => `<button class="${i === 0 ? 'pri' : ''}" onclick="formMov('${id}','${o}')">${rot[o]}</button>`).join('')}</div>
       <div class="card" style="margin-top:12px"><h3>Movimentações</h3><div id="movs">${movs ? '' : '<div class="loading">Carregando…</div>'}</div></div>
       <div class="btnrow"><button onclick="formAtivo('${id}')">Editar ativo</button></div>`);
@@ -839,7 +932,7 @@
     S.movs = movs;
     $('movs').innerHTML = movs.length ? movs.map(m => `<div class="item">
         <div class="main" onclick="formMov('${id}','${m.op}','${m.id}')" style="cursor:pointer"><div class="t">${esc(m.op)}${m.qtd ? ' · ' + m.qtd + ' cotas' : ''}</div>
-          <div class="s">${m.data.split('-').reverse().join('/')}${a.titular === 'Conjunta' ? ' · ' + esc(m.quem) : ''}${m.obs ? ' · ' + esc(m.obs) : ''}</div></div>
+          <div class="s">${m.data.split('-').reverse().join('/')}${a.titular === 'Conjunta' ? ' · ' + esc(m.quem === 'Eu' ? 'você' : m.quem) : ''}${m.qtd && m.valor ? ' · ' + fmt(m.valor / m.qtd) + '/un.' : ''}${m.obs ? ' · ' + esc(m.obs) : ''}</div></div>
         <div class="v${m.op === 'Resgate' || m.op === 'Venda' ? '' : ' rec'}">${m.op === 'Resgate' || m.op === 'Venda' ? '-' : m.op === 'Atualização de saldo' ? '=' : '+'}${fmt(m.valor)}</div>
         <button class="del" onclick="excluirMov('${m.id}','${id}')" aria-label="Excluir">✕</button></div>`).join('')
       : '<div style="color:var(--muted);font-size:14px">Nenhuma movimentação ainda.</div>';
@@ -870,7 +963,7 @@
       $('lblValor').textContent = o === 'Atualização de saldo' ? 'Saldo atual no banco (R$)' : o === 'Compra' || o === 'Venda' ? 'Valor total da operação (R$)' : 'Valor (R$)';
       $('mHint').textContent = o === 'Atualização de saldo' ? 'Informe o saldo que aparece hoje no app do banco. Isso não mexe no seu fluxo de caixa.'
         : o === 'Provento' ? 'Dividendos, JCP ou rendimentos recebidos. Entram no resultado do ativo.'
-        : (o === 'Aplicação' || o === 'Compra') ? (a.titular === 'Conjunta' ? 'O que você aportar sai da sua "sobra em conta" no fluxo de caixa; o que a ' + S.inv.esposa + ' aportar, não.' : 'Sai da sua "sobra em conta" no fluxo de caixa do mês.')
+        : (o === 'Aplicação' || o === 'Compra') ? (a.titular === S.inv.esposa ? 'Investimento da ' + S.inv.esposa + ': não mexe no seu fluxo de caixa.' : a.titular === 'Conjunta' ? 'O que você aportar sai da sua "sobra em conta" no fluxo de caixa; o que a ' + S.inv.esposa + ' aportar, não.' : 'Sai da sua "sobra em conta" no fluxo de caixa do mês.')
         : 'Volta para a sua "sobra em conta" no fluxo de caixa do mês.';
     };
     $('mOp').onchange = sync; sync();
@@ -882,7 +975,7 @@
       const b = $('mSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
         const r = await run('saveMov', { id: movId || '', ativoId, op: $('mOp').value, data: $('mData').value, valor,
-          qtd: parseValor($('mQtd').value || '0'), quem: q ? q.dataset.q : 'Eu', obs: $('mObs').value });
+          qtd: parseValor($('mQtd').value || '0'), quem: q ? q.dataset.q : (a.titular === S.inv.esposa ? S.inv.esposa : 'Eu'), obs: $('mObs').value });
         renderInv(r.inv); toast('Movimentação salva.'); abrirAtivo(ativoId, r.movs);
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
@@ -906,6 +999,70 @@
     };
   }
 
+  // ---------- Fixas e salário ----------
+  async function lancarProvisao(comp) {
+    try {
+      const r = await run('gerarFixasMes', comp);
+      toast(r.ok ? 'Provisão lançada. Toque em cada fixa para ajustar o valor do mês.' : r.msg);
+      if (S.mesVista === comp) renderMes(r.resumo);
+      if (comp === S.mesAtual) { renderHeader(r.resumo); renderUltimos(r.resumo); }
+      else if (comp === addMes(S.mesAtual, 1)) renderUltimos(null, r.resumo);
+      S.painelSujo = true;
+    } catch (e) { toast(e.message, true); }
+  }
+
+  async function telaRecorrentes(lista) {
+    abrirModal(`${hd('Fixas e salário')}<div class="hint">Valores padrão usados a cada mês. Para mudar só um mês, toque no lançamento na aba Mês.</div><div id="recs"><div class="loading">Carregando…</div></div>`);
+    try { lista = lista || await run('getRecorrentes'); } catch (e) { return toast(e.message, true); }
+    S.recs = lista;
+    if (!$('recs')) return;
+    const linha = x => `<div class="item${x.ativo ? '' : ' prev'}"><div class="main" onclick="formRecorrente(${x.row})"><div class="t">${esc(x.desc)}</div>
+      <div class="s">${esc([x.tipo === 'Receita' ? 'entrada' : x.cat, x.meio, 'dia ' + x.dia, x.pct ? (S.init.esposa || 'Mariana') + ' ' + Math.round(x.pct * 100) + '%' : '', x.ativo ? '' : 'pausada'].filter(Boolean).join(' · '))}</div></div>
+      <div class="v${x.tipo === 'Receita' ? ' rec' : ''}">${x.tipo === 'Receita' ? '+' : ''}${fmt(x.valor)}</div></div>`;
+    const rec = lista.filter(x => x.tipo === 'Receita'), des = lista.filter(x => x.tipo !== 'Receita');
+    $('recs').innerHTML = `<div class="card"><h3>Entradas fixas</h3>${rec.map(linha).join('') || '<div class="s">Nenhuma.</div>'}
+        <div class="btnrow"><button onclick="formRecorrente(0,'Receita')">+ Nova entrada fixa</button></div></div>
+      <div class="card"><h3>Despesas fixas</h3>${des.map(linha).join('') || '<div class="s">Nenhuma.</div>'}
+        <div class="btnrow"><button onclick="formRecorrente(0,'Despesa')">+ Nova despesa fixa</button></div></div>`;
+  }
+
+  function formRecorrente(row, tipoNovo) {
+    const x = row ? S.recs.find(r => r.row === row) : { desc: '', tipo: tipoNovo, cat: tipoNovo === 'Receita' ? 'Salário' : 'Moradia', meio: 'Pix/Débito', valor: 0, dia: 1, pct: 0, inicio: S.mesAtual, fim: '', ativo: true };
+    const cats = x.tipo === 'Receita' ? S.init.categoriasReceita : S.init.categoriasDespesa;
+    abrirModal(`${hd(row ? x.desc : (x.tipo === 'Receita' ? 'Nova entrada fixa' : 'Nova despesa fixa'))}
+      <label>Descrição</label><input id="rDesc" value="${esc(x.desc)}">
+      <label>Valor padrão (R$)</label><input id="rValor" class="valor moeda" inputmode="numeric" value="${num2(x.valor)}">
+      <div class="two">
+        <div><label>Categoria</label><select id="rCat">${cats.map(c => `<option${c === x.cat ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+        <div><label>Pagamento</label><select id="rMeio">${S.init.meios.map(m => `<option${m === x.meio ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div>
+      </div>
+      <div class="two">
+        <div><label>Dia</label><input id="rDia" type="number" inputmode="numeric" min="1" max="28" value="${x.dia}"></div>
+        ${x.tipo === 'Receita' ? '<div></div>' : `<div><label>Parte da ${esc(S.init.esposa || 'Mariana')} (%)</label><input id="rPct" type="number" inputmode="numeric" min="0" max="100" value="${Math.round(x.pct * 100)}"></div>`}
+      </div>
+      ${x.tipo === 'Receita' ? '' : `<div class="hint">Use o pagamento "Abatido do repasse" para contas que você paga descontando do repasse dela (luz, internet).</div>`}
+      <div class="two">
+        <div><label>Começa em</label><input id="rIni" type="month" value="${(x.inicio || S.mesAtual).slice(0, 7)}"></div>
+        <div><label>Termina em (opcional)</label><input id="rFim" type="month" value="${(x.fim || '').slice(0, 7)}"></div>
+      </div>
+      <div class="toggle"><span>Ativa</span><label class="sw" style="margin:0"><input type="checkbox" id="rOn"${x.ativo ? ' checked' : ''}><i></i></label></div>
+      <button class="btn" id="rSalvar">Salvar</button>
+      <div class="btnrow"><button onclick="telaRecorrentes(S.recs)">Voltar</button>${row ? `<button class="dang" id="rDel">Excluir</button>` : ''}</div>`);
+    $('rSalvar').onclick = async () => {
+      const b = $('rSalvar'); b.disabled = true; b.textContent = 'Salvando…';
+      try {
+        const l = await run('saveRecorrente', { row: row || 0, desc: $('rDesc').value, tipo: x.tipo, cat: $('rCat').value, meio: $('rMeio').value,
+          valor: parseValor($('rValor').value) || 0, dia: $('rDia').value, pct: $('rPct') ? (Number($('rPct').value) || 0) / 100 : 0,
+          inicio: $('rIni').value ? $('rIni').value + '-01' : '', fim: $('rFim').value ? $('rFim').value + '-01' : '', ativo: $('rOn').checked });
+        toast('Salvo. Vale a partir dos próximos lançamentos de fixas.'); S.painelSujo = true; telaRecorrentes(l);
+      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
+    };
+    if ($('rDel')) $('rDel').onclick = async () => {
+      if (!confirm('Excluir esta fixa? Os lançamentos já feitos continuam; ela só deixa de ser gerada. Para pausar, prefira desligar "Ativa".')) return;
+      try { telaRecorrentes(await run('deleteRecorrente', row)); toast('Excluída.'); } catch (e) { toast(e.message, true); }
+    };
+  }
+
   async function recarregarAtual() {
     try {
       const [r, prox] = await Promise.all([run('getMonthSummary', S.mesAtual), run('getMonthSummary', addMes(S.mesAtual, 1))]);
@@ -926,6 +1083,13 @@
   $('fDesc').addEventListener('change', aplicarSugestao);
 
   $('btnCfg').onclick = () => telaConfig();
+  $('btnMesHdr').onclick = () => {
+    S.mesAtual = S.mesAtual === S.mesFoco ? S.mesHoje : S.mesFoco;
+    S.mesVista = null; S.painelSujo = true;
+    recarregarAtual();
+    if (!$('tabMes').classList.contains('hidden')) abrirMes(S.mesAtual);
+    if (!$('tabPainel').classList.contains('hidden')) abrirPainel();
+  };
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
   (async function iniciar() {
@@ -933,7 +1097,11 @@
     try {
       const i = await run('getInitData');
       S.init = i;
-      S.mesAtual = i.hoje.slice(0, 8) + '01';
+      // Mês em foco: o da próxima fatura do cartão principal (depois do fechamento, já é o mês seguinte)
+      S.mesHoje = i.hoje.slice(0, 8) + '01';
+      const fech = i.config.fechamento['Cartão Inter'] || 5;
+      S.mesFoco = Number(i.hoje.slice(8, 10)) >= fech ? addMes(S.mesHoje, 1) : S.mesHoje;
+      S.mesAtual = S.mesFoco;
       $('fData').value = i.hoje;
       $('fPct').value = Math.round(i.config.pctMariana * 100);
       preencherSelect($('fCat'), i.categoriasDespesa, 'Mercado');
