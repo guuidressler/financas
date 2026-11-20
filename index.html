@@ -14,293 +14,363 @@
 <style>
   :root {
     --bg: #f4f6fa; --card: #ffffff; --ink: #1b2433; --muted: #6b7585; --line: #e3e7ee;
-    --brand: #1f3864; --brand-2: #2f5597; --ok: #1e8a4c; --bad: #c0392b; --warn: #b7791f;
-    --chip: #e8edf6;
+    --brand: #1f3864; --brand-2: #2f5597; --ok: #1e8a4c; --bad: #c0392b; --chip: #e8edf6;
+    --c-ent: #2e9e62; --c-des: #d9644f; --c-acc: #2f5597; --hdr: #1f3864; --hdr-chip: rgba(255,255,255,.1);
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #0f141c; --card: #171e2a; --ink: #e8edf5; --muted: #98a2b3; --line: #273142;
-      --brand: #8fb0ff; --brand-2: #6d93f0; --ok: #4cc38a; --bad: #ff7b6b; --warn: #f0b85a; --chip: #212b3b; }
+      --brand: #8fb0ff; --brand-2: #6d93f0; --ok: #4cc38a; --bad: #ff7b6b; --chip: #212b3b;
+      --c-ent: #4cc38a; --c-des: #ff8a73; --c-acc: #7fa3f5; --hdr: #1a2740; --hdr-chip: rgba(255,255,255,.07); }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg); color: var(--ink); padding-bottom: 84px; }
-  header { background: var(--brand); color: #fff; padding: calc(18px + env(safe-area-inset-top)) 16px 14px; position: relative; }
-  header .gear { position: absolute; right: 12px; top: calc(14px + env(safe-area-inset-top)); border: 0; background: rgba(255,255,255,.12);
-    color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 17px; }
-  @media (prefers-color-scheme: dark) { header { background: #1a2740; } }
-  header .lbl { padding-right: 46px; font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
-  header .big { font-size: 28px; font-weight: 700; margin-top: 2px; }
-  header .row { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; opacity: .92; flex-wrap: wrap; }
+    background: var(--bg); color: var(--ink); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  button { font: inherit; cursor: pointer; }
+  header { background: var(--hdr); color: #fff; padding: calc(14px + env(safe-area-inset-top)) 16px 12px; }
+  .hd-wrap { max-width: 560px; margin: 0 auto; }
+  .hd-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .mesnav { display: flex; align-items: center; gap: 6px; }
+  .mesnav button { border: 0; background: var(--hdr-chip); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; line-height: 1; }
+  .mesnav .nm { font-weight: 700; font-size: 15px; min-width: 118px; text-align: center; cursor: pointer; }
+  .mesnav .nm small { display: block; font-size: 10.5px; font-weight: 600; opacity: .75; }
+  .gear { border: 0; background: var(--hdr-chip); color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 17px; }
+  .sobra { margin-top: 10px; }
+  .sobra .lb { font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
+  .sobra .vl { font-size: 30px; font-weight: 800; line-height: 1.15; }
+  .sobra .vl.neg { color: #ffb3a6; }
+  .hgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .hgrid button { border: 0; text-align: left; background: var(--hdr-chip); color: #fff; border-radius: 10px; padding: 7px 9px; min-width: 0; }
+  .hgrid small { display: block; font-size: 10.5px; opacity: .78; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hgrid b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hnote { font-size: 12px; opacity: .8; margin-top: 8px; }
   main { padding: 12px 16px; max-width: 560px; margin: 0 auto; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 6px; }
   .seg { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--chip); border-radius: 10px; padding: 3px; gap: 3px; }
   .seg button { border: 0; background: transparent; padding: 9px 2px; border-radius: 8px; font-weight: 600; color: var(--muted); font-size: 13px; }
   .seg button.on { background: var(--card); color: var(--brand); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
   label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
   input, select { width: 100%; font-size: 16px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
-    background: var(--card); color: var(--ink); appearance: none; -webkit-appearance: none; }
+    background: var(--card); color: var(--ink); appearance: none; -webkit-appearance: none; font-family: inherit; }
   input:focus, select:focus { outline: 2px solid var(--brand-2); border-color: transparent; }
   .valor { font-size: 30px; font-weight: 700; text-align: center; padding: 12px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .toggle { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+  .toggle { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; gap: 10px; }
   .toggle span { font-weight: 600; }
-  .sw { position: relative; width: 50px; height: 30px; flex: none; }
-  .sw input { opacity: 0; width: 0; height: 0; }
+  .sw { position: relative; width: 50px; height: 30px; flex: none; margin: 0 !important; }
+  .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
   .sw i { position: absolute; inset: 0; background: var(--line); border-radius: 30px; transition: .2s; }
   .sw i:before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
   .sw input:checked + i { background: var(--ok); }
   .sw input:checked + i:before { transform: translateX(20px); }
-  .hint { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 18px; }
-  .btn { display: block; width: 100%; border: 0; border-radius: 12px; padding: 15px; font-size: 17px; font-weight: 700;
-    background: var(--brand); color: #fff; margin-top: 16px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 12px; padding: 15px; font-size: 17px; font-weight: 700; background: var(--brand); color: #fff; margin-top: 16px; }
   @media (prefers-color-scheme: dark) { .btn { background: var(--brand-2); color: #0f141c; } }
   .btn:disabled { opacity: .55; }
-  .btn.sec { background: var(--chip); color: var(--brand); font-size: 14px; padding: 10px; margin-top: 8px; }
-  nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
-    display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); }
-  nav button { border: 0; background: transparent; padding: 12px 0 14px; font-size: 13px; font-weight: 600; color: var(--muted); }
-  nav button.on { color: var(--brand); }
-  nav svg { display: block; margin: 0 auto 3px; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btnrow button { flex: 1 1 auto; border: 0; border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 14px; background: var(--chip); color: var(--brand); }
+  .btnrow button.pri { background: var(--brand); color: #fff; }
+  @media (prefers-color-scheme: dark) { .btnrow button.pri { background: var(--brand-2); color: #0f141c; } }
+  .btnrow button.dang { background: transparent; color: var(--bad); border: 1px solid var(--line); }
   .hidden { display: none !important; }
-  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-  .kpi small { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
-  .kpi b { font-size: 18px; }
-  .monthnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .monthnav button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 10px; width: 42px; height: 38px; font-size: 18px; }
-  .monthnav h2 { margin: 0; font-size: 18px; }
+  .loading { text-align: center; color: var(--muted); padding: 30px 0; }
+  .item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .item:last-child { border-bottom: 0; }
+  .item .main { flex: 1; min-width: 0; cursor: pointer; }
+  .item .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item .s { font-size: 12px; color: var(--muted); }
+  .item .v { font-weight: 700; text-align: right; white-space: nowrap; }
+  .item .v small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); }
+  .item.prev { opacity: .6; }
+  .rec { color: var(--ok); } .neg { color: var(--bad); } .pos { color: var(--ok); }
+  .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; background: transparent; padding: 0; }
+  .dot.on { background: var(--ok); border-color: var(--ok); }
+  .lnk { border: 0; background: transparent; color: var(--bad); font-size: 13px; font-weight: 700; padding: 6px 4px; flex: none; }
   .grp-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .grp-h h3 { margin: 0; }
   .grp-h b { font-size: 15px; white-space: nowrap; }
   .grp-sub { font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
   .cardsub { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 10px 0 2px; padding-top: 8px; border-top: 1px dashed var(--line); }
-  .cardsub:first-of-type { border-top: 0; padding-top: 0; }
   .cardsub button { border: 0; background: var(--chip); color: var(--brand); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 12px; }
-  .item.prev { opacity: .6; }
-  header .mesbtn { margin-top: 6px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; border-radius: 20px;
-    padding: 4px 12px; font-size: 12px; font-weight: 600; }
-  .pessoa { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
-  .pessoa .nm { font-weight: 700; }
-  .pessoa .vl { font-weight: 800; font-size: 18px; text-align: right; }
-  .pessoa .sb { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
-  .split { display: flex; gap: 8px; margin-top: 8px; }
-  .split > div { flex: 1; background: var(--chip); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
-  .split b { display: block; font-size: 15px; color: var(--ink); }
-  .item .main { cursor: pointer; }
-  .bar { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 14px; margin: 8px 0; }
-  .bar .track { grid-column: 1 / -1; height: 6px; background: var(--chip); border-radius: 6px; overflow: hidden; }
-  .bar .fill { height: 100%; background: var(--brand-2); }
-  .item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .item:last-child { border-bottom: 0; }
-  .item .main { flex: 1; min-width: 0; }
-  .item .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .item .s { font-size: 12px; color: var(--muted); }
-  .item .v { font-weight: 700; text-align: right; white-space: nowrap; }
-  .item .v.rec { color: var(--ok); }
-  .item .v small { display: block; font-weight: 500; font-size: 11px; color: var(--muted); }
-  .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; background: transparent; padding: 0; }
-  .dot.on { background: var(--ok); border-color: var(--ok); }
-  .del { border: 0; background: transparent; color: var(--muted); font-size: 18px; padding: 4px 6px; }
-  .fat { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; font-size: 14px; }
-  .fat button { border: 0; background: var(--chip); color: var(--brand); border-radius: 8px; padding: 7px 10px; font-weight: 600; font-size: 13px; }
-  .toast { position: fixed; left: 16px; right: 16px; bottom: 92px; background: #111a28; color: #fff; padding: 13px 14px;
-    border-radius: 12px; font-size: 15px; opacity: 0; visibility: hidden; transform: translateY(20px); transition: .25s; z-index: 9; max-width: 528px; margin: 0 auto; }
-  .toast.show { transform: none; opacity: 1; visibility: visible; }
-  .toast.err { background: var(--bad); }
-  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 6px; }
-  .neg { color: var(--bad); } .pos { color: var(--ok); }
-  .loading { text-align: center; color: var(--muted); padding: 30px 0; }
-  .chart svg { width: 100%; height: auto; display: block; }
-  .chart text { font-size: 10px; fill: var(--muted); }
-  .chart .lbl { fill: var(--ink); font-weight: 700; }
-  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-  :root { --c-ent: #2e9e62; --c-des: #d9644f; --c-acc: #2f5597; --c-avg: #1b2433; }
-  @media (prefers-color-scheme: dark) { :root { --c-ent: #4cc38a; --c-des: #ff8a73; --c-acc: #7fa3f5; --c-avg: #e8edf5; } }
-  .cbar { margin: 10px 0 12px; }
-  .cbar .top { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
-  .cbar .top span:last-child { font-weight: 700; white-space: nowrap; }
-  .cbar .track { position: relative; height: 8px; background: var(--chip); border-radius: 8px; margin-top: 5px; }
-  .cbar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 8px; background: var(--c-acc); }
-  .cbar .fill.over { background: var(--c-des); }
-  .cbar .avg { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--c-avg); border-radius: 2px; }
-  .cbar .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .up { color: var(--bad); } .down { color: var(--ok); }
   .rowv { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; gap: 10px; }
   .rowv:last-child { border-bottom: 0; }
   .rowv b { white-space: nowrap; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+  .kpi small { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+  .kpi b { font-size: 16px; white-space: nowrap; display: block; overflow: hidden; text-overflow: ellipsis; }
   .prog { height: 12px; background: var(--chip); border-radius: 12px; overflow: hidden; margin: 8px 0 4px; }
   .prog i { display: block; height: 100%; background: var(--c-ent); border-radius: 12px; }
-  .asset { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
-  .asset:last-child { border-bottom: 0; }
-  .asset .main { flex: 1; min-width: 0; }
-  .asset .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .asset .s { font-size: 12px; color: var(--muted); }
-  .asset .v { text-align: right; font-weight: 700; white-space: nowrap; }
-  .asset .v small { display: block; font-size: 12px; font-weight: 600; }
-  .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
-    background: var(--chip); color: var(--brand); border-radius: 6px; padding: 2px 6px; margin-right: 4px; }
-  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .btnrow button { flex: 1 1 auto; border: 0; border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 14px;
-    background: var(--chip); color: var(--brand); }
-  .btnrow button.pri { background: var(--brand); color: #fff; }
-  @media (prefers-color-scheme: dark) { .btnrow button.pri { background: var(--brand-2); color: #0f141c; } }
-  .btnrow button.dang { background: transparent; color: var(--bad); border: 1px solid var(--line); }
+  .bar { margin: 9px 0; }
+  .bar .top { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
+  .bar .top span:last-child { font-weight: 700; white-space: nowrap; }
+  .bar .track { height: 7px; background: var(--chip); border-radius: 7px; overflow: hidden; margin-top: 4px; }
+  .bar .fill { height: 100%; background: var(--c-acc); border-radius: 7px; }
+  .bar .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: var(--chip); color: var(--brand); border-radius: 6px; padding: 2px 6px; margin-right: 4px; }
+  .split { display: flex; gap: 8px; margin-top: 8px; }
+  .split > div { flex: 1; background: var(--chip); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
+  .split b { display: block; font-size: 15px; color: var(--ink); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chips button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 20px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .chips button.on { background: var(--brand); color: #fff; border-color: transparent; }
+  @media (prefers-color-scheme: dark) { .chips button.on { background: var(--brand-2); color: #0f141c; } }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart text { font-size: 10px; fill: var(--muted); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  table.mt { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  table.mt th, table.mt td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.mt th:first-child, table.mt td:first-child { text-align: left; }
+  table.mt th { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .tw { overflow-x: auto; }
+  nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
+    display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav button { border: 0; background: transparent; padding: 10px 0 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  nav button.on { color: var(--brand); }
+  nav svg { display: block; margin: 0 auto 3px; }
   .ovl { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
   .sheet { background: var(--bg); width: 100%; max-width: 560px; max-height: 92vh; overflow: auto; border-radius: 18px 18px 0 0;
     padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
-  .sheet .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .sheet .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
   .sheet .hd h2 { margin: 0; font-size: 19px; }
-  .sheet .x { border: 0; background: var(--chip); color: var(--ink); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; }
+  .sheet .x { border: 0; background: var(--chip); color: var(--ink); width: 34px; height: 34px; border-radius: 50%; font-size: 16px; flex: none; }
+  .toast { position: fixed; left: 16px; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom)); background: #111a28; color: #fff; padding: 13px 14px;
+    border-radius: 12px; font-size: 15px; opacity: 0; visibility: hidden; transform: translateY(20px); transition: .25s; z-index: 30; max-width: 528px; margin: 0 auto; }
+  .toast.show { transform: none; opacity: 1; visibility: visible; }
+  .toast.err { background: var(--bad); }
+  /* Fatura por cartão */
+  .fat { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 10px 0 4px; }
+  .fat-h { display: flex; align-items: center; gap: 10px; }
+  .fat-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; flex: none; }
+  .fat-h .nm { flex: 1; min-width: 0; font-weight: 700; }
+  .fat-h .nm small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+  .fat-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 12px; color: var(--muted); margin: 8px 0; padding: 8px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
+  .fat-meta b { display: block; color: var(--ink); font-size: 13px; }
+  .fat-meta > div:last-child { text-align: right; }
+  .fat-f { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 20px; padding: 3px 9px; color: #fff; }
+  .b-aberta { background: var(--c-acc); } .b-fechada { background: var(--bad); } .b-paga { background: var(--ok); }
+  .fat-f button { border: 0; background: transparent; color: var(--brand); font-weight: 700; font-size: 13px; padding: 4px 0; }
+  details.fat-l summary { cursor: pointer; font-size: 13px; color: var(--brand); font-weight: 600; margin-top: 6px; list-style: none; }
+  details.fat-l summary::-webkit-details-marker { display: none; }
+  /* Orçamento */
+  .orc { margin: 12px 0; }
+  .orc .top { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
+  .orc .top b { white-space: nowrap; }
+  .orc .trk { position: relative; height: 9px; background: var(--chip); border-radius: 9px; margin-top: 5px; }
+  .orc .trk i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 9px; }
+  .orc .trk u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .55; text-decoration: none; }
+  .orc .sub { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  /* Rosca */
+  .donut { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .donut svg { width: 150px; height: 150px; flex: none; }
+  .donut ul { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 150px; font-size: 13px; }
+  .donut li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; }
+  .donut li i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .donut li span:last-child { color: var(--muted); white-space: nowrap; }
+  .nav-brand { display: none; }
+  /* Computador: menu lateral e cartões em colunas */
+  @media (min-width: 960px) {
+    body { padding-bottom: 0; padding-left: 92px; }
+    nav { top: 0; right: auto; width: 92px; grid-template-columns: 1fr; grid-auto-rows: min-content; gap: 4px;
+      border-top: 0; border-right: 1px solid var(--line); padding: 14px 0 0; }
+    nav button { border-radius: 12px; margin: 0 8px; padding: 10px 0; }
+    nav button.on { background: var(--chip); }
+    .nav-brand { display: block; text-align: center; font-weight: 800; color: var(--brand); font-size: 13px; padding: 4px 0 12px; }
+    header { padding: 18px 28px 16px; }
+    .hd-wrap, main { max-width: 1240px; }
+    .hd-wrap { display: grid; grid-template-columns: 300px 1fr; column-gap: 24px; align-items: end; }
+    .hd-row { grid-column: 1 / -1; }
+    .sobra .vl { font-size: 36px; }
+    .hgrid { grid-template-columns: repeat(6, 1fr); margin-top: 0; }
+    .hgrid button { padding: 10px 12px; }
+    .hgrid b { font-size: 16px; }
+    .hnote { grid-column: 1 / -1; }
+    main { padding: 20px 28px; }
+    #tabLancar { max-width: 620px; margin: 0 auto; }
+    #hist, #inv, #painel { columns: 2; column-gap: 16px; }
+    #hist > *, #inv > *, #painel > * { break-inside: avoid; }
+    #segPessoa { max-width: 420px; }
+    .ovl { align-items: center; }
+    .sheet { border-radius: 18px; max-height: 88vh; }
+    .toast { left: 108px; bottom: 24px; }
+  }
+  @media (min-width: 1400px) { #hist, #painel { columns: 3; } }
 </style>
 </head>
 <body>
 <header>
-  <button class="gear" id="btnCfg" aria-label="Configurações">⚙</button>
-  <div class="lbl" id="hMes">Carregando…</div>
-  <div class="big" id="hSaldo">R$ –</div>
-  <div class="row"><span id="hEnt"></span><span id="hDes"></span><span id="hMar"></span></div>
-  <div class="row" style="margin-top:4px"><span id="hConta"></span></div>
-  <button class="mesbtn hidden" id="btnMesHdr"></button>
+  <div class="hd-wrap">
+    <div class="hd-row">
+      <div class="mesnav">
+        <button id="mPrev" aria-label="Mês anterior">‹</button>
+        <div class="nm" id="hMes"><span id="hMesT">…</span><small id="hMesSub"></small></div>
+        <button id="mNext" aria-label="Próximo mês">›</button>
+      </div>
+      <button class="gear" id="btnCfg" aria-label="Configurações">⚙</button>
+    </div>
+    <div class="sobra"><div class="lb">Sobra do salário</div><div class="vl" id="hSobra">R$ –</div></div>
+    <div class="hgrid">
+      <button data-ir="hist-entradas"><small>Entradas</small><b id="hEnt">–</b></button>
+      <button data-ir="hist-saidas"><small>Saídas</small><b id="hSai">–</b></button>
+      <button data-ir="hist-mariana"><small id="hMarLb">Mariana</small><b id="hMar">–</b></button>
+      <button data-ir="hist-cartao"><small>Cartão</small><b id="hCar">–</b></button>
+      <button data-ir="hist-fixos"><small>Fixos</small><b id="hFix">–</b></button>
+      <button data-ir="inv"><small>Investido</small><b id="hInv">–</b></button>
+    </div>
+    <div class="hnote" id="hNote"></div>
+  </div>
 </header>
 
 <main>
-  <!-- LANÇAR -->
   <section id="tabLancar">
     <div class="card">
       <div class="seg" id="segTipo">
         <button data-v="Despesa" class="on">Despesa</button>
         <button data-v="Receita">Receita</button>
         <button data-v="Desconto">Desconto</button>
-        <button data-v="Acerto">Mariana</button>
+        <button data-v="Acerto" class="nmEsp">Mariana</button>
       </div>
-
       <label for="fValor">Valor (R$)</label>
       <input id="fValor" class="valor moeda" inputmode="numeric" placeholder="0,00" autocomplete="off">
-
       <label for="fDesc">Descrição</label>
       <input id="fDesc" list="dlDesc" placeholder="Ex.: Bistek" autocomplete="off">
       <datalist id="dlDesc"></datalist>
-
       <div class="two">
         <div id="boxCat"><label for="fCat">Categoria</label><select id="fCat"></select></div>
         <div><label for="fMeio">Pagamento</label><select id="fMeio"></select></div>
       </div>
-
       <div class="two">
         <div><label for="fData">Data</label><input id="fData" type="date"></div>
         <div id="boxParc"><label for="fParc">Parcelas</label><input id="fParc" type="number" inputmode="numeric" min="1" max="48" value="1"></div>
       </div>
-
       <div id="boxModo" class="hidden">
         <label for="fModo">O valor informado é</label>
         <select id="fModo"><option value="parcela">Valor de cada parcela</option><option value="total">Valor total da compra</option></select>
       </div>
-
       <div id="boxMar">
-        <div class="toggle">
-          <span>Dividir com a Mariana</span>
-          <label class="sw" style="margin:0"><input type="checkbox" id="fDiv"><i></i></label>
-        </div>
-        <div id="boxPct" class="hidden">
-          <label for="fPct">Parte dela (%)</label>
-          <input id="fPct" type="number" inputmode="numeric" min="1" max="100" value="50">
-        </div>
+        <div class="toggle"><span>Dividir com a <span class="nmEsp">Mariana</span></span><label class="sw"><input type="checkbox" id="fDiv"><i></i></label></div>
+        <div id="boxPct" class="hidden"><label for="fPct">Parte dela (%)</label><input id="fPct" type="number" inputmode="numeric" min="1" max="100" value="50"></div>
       </div>
-
       <div class="hint" id="hint"></div>
       <button class="btn" id="btnSalvar">Salvar lançamento</button>
     </div>
-    <div class="card">
-      <div class="grp-h"><h3>Cartão de crédito · últimas compras</h3></div>
-      <div id="ultCartao" class="loading">Carregando…</div>
-    </div>
-    <div class="card">
-      <div class="grp-h"><h3 id="tFixas">Fixas e salário do mês</h3><b id="totFixas"></b></div>
-      <div class="grp-sub" id="subFixas"></div>
-      <div id="ultFixas" class="loading">Carregando…</div>
-    </div>
+    <div class="hint" id="ultimo" style="text-align:center"></div>
   </section>
 
-  <!-- MÊS -->
-  <section id="tabMes" class="hidden">
-    <div class="monthnav">
-      <button id="mPrev" aria-label="Mês anterior">‹</button>
-      <h2 id="mTitulo"></h2>
-      <button id="mNext" aria-label="Próximo mês">›</button>
-    </div>
-    <div class="kpis" style="margin-bottom:12px">
-      <div class="kpi"><small>Entradas</small><b id="kEnt"></b></div>
-      <div class="kpi"><small>Despesas</small><b id="kDes"></b></div>
-      <div class="kpi"><small>Mariana transfere</small><b id="kMar"></b></div>
-      <div class="kpi"><small>Investido no mês</small><b id="kInv"></b></div>
-      <div class="kpi"><small>Sobra em conta no mês</small><b id="kConta"></b></div>
-      <div class="kpi"><small>Saldo previsto na conta</small><b id="kAcum"></b></div>
-    </div>
-    <div class="hint" id="kExpl" style="margin:-4px 2px 12px"></div>
-    <div id="grupos"></div>
-    <div class="card"><h3>Por categoria</h3><div id="cats"></div></div>
-  </section>
+  <section id="tabHist" class="hidden"><div id="hist"><div class="loading">Carregando…</div></div></section>
 
-  <!-- INVESTIR -->
   <section id="tabInv" class="hidden">
+    <div class="seg" id="segPessoa" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
+      <button data-p="eu" class="on">Você</button><button data-p="esposa" class="nmEsp">Mariana</button>
+    </div>
     <div id="inv"><div class="loading">Carregando…</div></div>
   </section>
 
-  <!-- PAINEL -->
   <section id="tabPainel" class="hidden">
+    <div class="card">
+      <h3>Período</h3>
+      <div class="chips" id="chipsPer">
+        <button data-per="3">3 meses</button><button data-per="6" class="on">6 meses</button><button data-per="12">12 meses</button>
+        <button data-per="ano">Este ano</button><button data-per="livre">Escolher</button>
+      </div>
+      <div id="boxLivre" class="hidden">
+        <div class="two"><div><label for="pDe">De</label><input id="pDe" type="month"></div><div><label for="pAte">Até</label><input id="pAte" type="month"></div></div>
+        <div class="btnrow"><button class="pri" id="pAplicar">Aplicar</button></div>
+      </div>
+    </div>
     <div id="painel"><div class="loading">Carregando…</div></div>
   </section>
 </main>
 
 <nav>
-  <button id="nLancar" class="on">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Lançar</button>
-  <button id="nMes">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Mês</button>
-  <button id="nInv">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Investir</button>
-  <button id="nPainel">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Painel</button>
+  <div class="nav-brand">Finanças</div>
+  <button data-tab="lancar" class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Lançar</button>
+  <button data-tab="hist"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Histórico</button>
+  <button data-tab="inv"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Investimentos</button>
+  <button data-tab="painel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Painel</button>
 </nav>
 <div class="toast" id="toast"></div>
 <div class="ovl hidden" id="ovl"><div class="sheet" id="sheet"></div></div>
 
 <script>
-  const S = { tipo: 'Despesa', init: null, mesAtual: null, mesVista: null, resumo: null };
+  const S = { tipo: 'Despesa', init: null, mes: null, mesFoco: null, mesHoje: null, resumo: null, aba: 'lancar',
+              inv: null, pessoa: 'eu', per: { tipo: '6' }, recs: null, movs: null, ativoAtual: null };
   const $ = id => document.getElementById(id);
-  const fmt = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt0 = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(Math.round(v || 0)).toLocaleString('pt-BR');
+  const num2 = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const mesNome = iso => { const [y, m] = iso.split('-').map(Number); return MESES[m - 1] + ' de ' + y; };
   const mesCurto = iso => { const [y, m] = iso.split('-').map(Number); return MESES[m - 1].slice(0, 3) + '/' + y; };
   const addMes = (iso, k) => { const [y, m] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1 + k, 1));
     return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-01'; };
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  // ---------- Comunicação com a ponte (Apps Script) ----------
+  const dataBr = iso => iso ? iso.split('-').reverse().join('/') : '';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esp = () => (S.init && S.init.esposa) || 'Mariana';
+  const ehCartao = x => String(x.meio).indexOf('Cartão') === 0;
+  const ehBolsa = t => t === 'Ação' || t === 'FII';
+  const COR_CAT = ['#2f6fdb', '#8a4fd6', '#f2a516', '#18a6b8', '#e2574c', '#3fae5a', '#6b7585'];
+  // Gráfico de rosca: top 5 + "Demais"
+  function donut(lista) {
+    const pos = lista.filter(c => c.valor > 0).sort((a, b) => b.valor - a.valor);
+    const top = pos.slice(0, 5), resto = pos.slice(5).reduce((s, c) => s + c.valor, 0);
+    if (resto > 0) top.push({ nome: 'Demais', valor: resto });
+    const tot = top.reduce((s, c) => s + c.valor, 0); if (!tot) return '<div class="hint">Sem gastos.</div>';
+    const R = 52, C = 2 * Math.PI * R; let acc = 0, arcs = '';
+    top.forEach((c, i) => { const f = c.valor / tot;
+      arcs += `<circle r="${R}" cx="75" cy="75" fill="none" stroke="${COR_CAT[i % COR_CAT.length]}" stroke-width="22" stroke-dasharray="${f * C} ${C}" stroke-dashoffset="${-acc * C}" transform="rotate(-90 75 75)"><title>${esc(c.nome)} ${fmt(c.valor)}</title></circle>`; acc += f; });
+    return `<div class="donut"><svg viewBox="0 0 150 150" role="img">${arcs}<text x="75" y="72" text-anchor="middle" style="font-size:10px;fill:var(--muted)">total</text>
+      <text x="75" y="88" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--ink)">${esc(fmt0(tot))}</text></svg>
+      <ul>${top.map((c, i) => `<li><span><i style="background:${COR_CAT[i % COR_CAT.length]}"></i>${esc(c.nome)}</span><span>${Math.round(c.valor / tot * 100)}%</span></li>`).join('')}</ul></div>`;
+  }
+
+  function toast(msg, erro) {
+    const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (erro ? ' err' : '');
+    clearTimeout(t._h); t._h = setTimeout(() => t.className = 'toast', 3400);
+  }
+  function abrirModal(html) { $('sheet').innerHTML = html; $('ovl').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+  function fecharModal() { $('ovl').classList.add('hidden'); $('sheet').innerHTML = ''; document.body.style.overflow = ''; }
+  const hd = t => `<div class="hd"><h2>${esc(t)}</h2><button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button></div>`;
+
+  // Dinheiro estilo app de banco: digita só números, a vírgula entra sozinha (1234 -> 12,34)
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!el.classList || !el.classList.contains('moeda')) return;
+    const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
+    el.value = d ? num2(parseInt(d, 10) / 100) : '';
+  });
+  function parseValor(s) {
+    s = String(s || '').trim().replace(/[R$\s]/g, '');
+    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    return Number(s);
+  }
+  function preencherSelect(sel, itens, valor) { sel.innerHTML = itens.map(i => `<option${i === valor ? ' selected' : ''}>${esc(i)}</option>`).join(''); }
+
+  // ---------- Conexão com a ponte ----------
   const CFG_KEY = 'financas.cfg.v1';
   function lerCfg() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; } }
   function salvarCfg(c) { try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); return true; } catch (e) { return false; } }
   async function run(fn, ...args) {
     const cfg = lerCfg();
-    if (!cfg || !cfg.url || !cfg.chave) { telaConfig(); throw new Error('Configure o app primeiro.'); }
+    if (!cfg || !cfg.url || !cfg.chave) { telaConexao(); throw new Error('Configure o app primeiro.'); }
     let resp;
     try {
-      // text/plain evita a verificação prévia (CORS) e é aceito pelo Apps Script
       resp = await fetch(cfg.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ chave: cfg.chave, fn, args }), redirect: 'follow', cache: 'no-store' });
     } catch (e) { throw new Error('Sem conexão com a planilha. Verifique a internet.'); }
     let d;
-    try { d = await resp.json(); } catch (e) { throw new Error('Resposta inesperada. Confira a URL da ponte nas configurações (⚙).'); }
-    if (!d.ok) { if (d.auth) telaConfig('Chave inválida. Gere uma nova na planilha (menu Painel) e cole aqui.'); throw new Error(d.erro || 'Erro desconhecido.'); }
+    try { d = await resp.json(); } catch (e) { throw new Error('Resposta inesperada. Confira a URL da ponte em ⚙ → Conexão.'); }
+    if (!d.ok) { if (d.auth) telaConexao('Chave inválida. Gere uma nova na planilha (menu Painel) e cole aqui.'); throw new Error(d.erro || 'Erro desconhecido.'); }
     return d.res;
   }
-
-  function telaConfig(aviso) {
+  function telaConexao(aviso) {
     const c = lerCfg() || {};
     abrirModal(`<div class="hd"><h2>Conectar à planilha</h2>${c.url && c.chave ? '<button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button>' : ''}</div>
       ${aviso ? `<div class="hint" style="color:var(--bad)">${esc(aviso)}</div>` : ''}
-      <label>URL da ponte (termina em /exec)</label><input id="cUrl" value="${esc(c.url || '')}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <label>Chave do app</label><input id="cChave" type="password" value="${esc(c.chave || '')}" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="cUrl">URL da ponte (termina em /exec)</label><input id="cUrl" value="${esc(c.url || '')}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label for="cChave">Chave do app</label><input id="cChave" type="password" value="${esc(c.chave || '')}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="hint">A chave aparece na planilha, no menu Painel &gt; Gerar nova chave do app. Ela fica guardada só neste celular.</div>
       <button class="btn" id="cSalvar">Conectar</button>
       ${c.url ? '<div class="btnrow"><button class="dang" id="cSair">Desconectar deste celular</button></div>' : ''}`);
@@ -308,39 +378,48 @@
       const url = $('cUrl').value.trim(), chave = $('cChave').value.trim();
       if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)) return toast('URL inválida. Copie a URL do app da Web, que termina em /exec.', true);
       if (chave.length < 32) return toast('Chave incompleta.', true);
-      const ant = lerCfg();
-      salvarCfg({ url, chave });
+      const ant = lerCfg(); salvarCfg({ url, chave });
       const b = $('cSalvar'); b.disabled = true; b.textContent = 'Testando…';
-      try { await run('getMonthSummary'); fecharModal(); toast('Conectado.'); location.reload(); }
-      catch (e) { salvarCfg(ant); b.disabled = false; b.textContent = 'Conectar'; toast(e.message, true); }
+      try { await run('getConfig'); fecharModal(); toast('Conectado.'); location.reload(); }
+      catch (e) { if (ant) salvarCfg(ant); else try { localStorage.removeItem(CFG_KEY); } catch (er) {} b.disabled = false; b.textContent = 'Conectar'; toast(e.message, true); }
     };
-    if ($('cSair')) $('cSair').onclick = () => { if (confirm('Apagar a URL e a chave deste celular?')) { try { localStorage.removeItem(CFG_KEY); } catch (e) {} location.reload(); } };
+    if ($('cSair')) $('cSair').onclick = () => { try { localStorage.removeItem(CFG_KEY); } catch (e) {} location.reload(); };
   }
 
-  function toast(msg, erro) {
-    const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (erro ? ' err' : '');
-    clearTimeout(t._h); t._h = setTimeout(() => t.className = 'toast', 3200);
+  // ---------- Topo: mês e totais ----------
+  async function carregarMes() {
+    const pedido = S.mes;
+    try {
+      const r = await run('getMonthSummary', pedido);
+      if (pedido !== S.mes) return;   // o usuário já trocou de mês
+      S.resumo = r; renderTopo(r);
+      if (S.aba === 'hist') renderHist(r);
+    } catch (e) { toast(e.message, true); }
+  }
+  function renderTopo(r) {
+    $('hMesT').textContent = mesNome(r.comp);
+    $('hMesSub').textContent = r.comp === S.mesFoco && S.mesFoco !== S.mesHoje ? 'próxima fatura' : r.comp === S.mesHoje ? 'mês atual'
+      : r.situacao === 'Previsto' ? 'previsto' : 'toque para voltar';
+    $('hSobra').textContent = fmt(r.sobraSalario);
+    $('hSobra').classList.toggle('neg', r.sobraSalario < 0);
+    const f = window.innerWidth < 600 ? fmt0 : fmt;   // no celular, sem centavos para caber
+    $('hEnt').textContent = f(r.entradas);
+    $('hSai').textContent = f(r.despesas);
+    $('hMarLb').textContent = esp();
+    $('hMar').textContent = f(r.repasseLiquido);
+    $('hCar').textContent = f(r.cartao);
+    $('hFix').textContent = f(r.fixos);
+    $('hInv').textContent = f(r.patrimonio && typeof r.patrimonio === 'object' ? r.patrimonio.minhaParte : r.patrimonio);
+    $('hNote').textContent = 'Entradas + repasse − saídas' + (r.sobraVale ? ` (sem os ${fmt(r.sobraVale)} que sobram no vale)` : '') + '. Investimentos não entram nesta conta.';
+  }
+  function mudarMes(k) {
+    S.mes = k === 0 ? S.mesFoco : addMes(S.mes, k);
+    $('hMesT').textContent = mesNome(S.mes); $('hMesSub').textContent = 'carregando…';
+    if (S.aba === 'hist') $('hist').innerHTML = '<div class="loading">Carregando…</div>';
+    carregarMes();
   }
 
-  // Campo de dinheiro estilo app de banco: você digita só números e a vírgula entra sozinha (1234 -> 12,34)
-  const num2 = v => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  document.addEventListener('input', e => {
-    const el = e.target;
-    if (!el.classList || !el.classList.contains('moeda')) return;
-    const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
-    el.value = d ? num2(parseInt(d, 10) / 100) : '';
-  });
-
-  function parseValor(s) {
-    s = String(s).trim().replace(/[R$\s]/g, '');
-    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
-    return Number(s);
-  }
-
-  function preencherSelect(sel, itens, valor) {
-    sel.innerHTML = itens.map(i => `<option${i === valor ? ' selected' : ''}>${esc(i)}</option>`).join('');
-  }
-
+  // ---------- Lançar ----------
   function setTipo(t) {
     S.tipo = t;
     document.querySelectorAll('#segTipo button').forEach(b => b.classList.toggle('on', b.dataset.v === t));
@@ -349,536 +428,382 @@
     $('boxParc').classList.toggle('hidden', t !== 'Despesa');
     $('boxMar').classList.toggle('hidden', t !== 'Despesa');
     if (t === 'Receita') preencherSelect($('fCat'), i.categoriasReceita, 'Salário');
-    if (t === 'Despesa') preencherSelect($('fCat'), i.categoriasDespesa, $('fCat').value);
-    if ((t === 'Receita' || t === 'Acerto') && $('fMeio').value.startsWith('Cartão')) $('fMeio').value = 'Pix/Débito';
-    if (t === 'Desconto' && !$('fMeio').value.startsWith('Cartão')) $('fMeio').value = 'Cartão Inter';
-    $('fDesc').placeholder = t === 'Acerto' ? 'Ex.: Mesa, combustível' : t === 'Desconto' ? 'Desconto com pontos do cartão' : t === 'Receita' ? 'Ex.: Salário' : 'Ex.: Bistek';
+    if (t === 'Despesa') preencherSelect($('fCat'), i.categoriasDespesa, i.categoriasDespesa.includes($('fCat').value) ? $('fCat').value : 'Mercado');
+    if ((t === 'Receita' || t === 'Acerto') && ehCartao({ meio: $('fMeio').value })) $('fMeio').value = 'Pix/Débito';
+    if (t === 'Desconto' && !ehCartao({ meio: $('fMeio').value })) $('fMeio').value = (i.meios.find(m => m.indexOf('Cartão') === 0) || '');
+    $('fDesc').placeholder = t === 'Acerto' ? 'Ex.: Mesa, combustível' : t === 'Receita' ? 'Ex.: Salário' : t === 'Desconto' ? 'Desconto com pontos do cartão' : 'Ex.: Bistek';
     atualizarHint();
   }
-
+  function compDe(dataIso, meio) {
+    const f = S.init.config.fechamento[meio];
+    const [y, m, d] = dataIso.split('-').map(Number);
+    let comp = `${y}-${String(m).padStart(2, '0')}-01`;
+    if (f && d >= f) comp = addMes(comp, 1);
+    return { comp, cartao: !!f };
+  }
   function atualizarHint() {
     if (!S.init) return;
     const n = Math.max(1, parseInt($('fParc').value, 10) || 1);
     $('boxModo').classList.toggle('hidden', !(S.tipo === 'Despesa' && n > 1));
     $('boxPct').classList.toggle('hidden', !$('fDiv').checked);
-    const v = parseValor($('fValor').value) || 0;
-    const meio = $('fMeio').value;
-    const data = $('fData').value;
+    const v = parseValor($('fValor').value) || 0, meio = $('fMeio').value, data = $('fData').value;
     let h = '';
-    if (S.tipo === 'Despesa' && data) {
-      const f = S.init.config.fechamento[meio];
-      const [y, m, d] = data.split('-').map(Number);
-      let comp = `${y}-${String(m).padStart(2, '0')}-01`;
-      if (f && d >= f) comp = addMes(comp, 1);
-      h = f ? `Entra na fatura de ${mesCurto(comp)}` : `Entra em ${mesCurto(comp)}`;
-      if (n > 1) {
-        const parc = $('fModo').value === 'total' ? v / n : v;
-        h += ` · ${n}x de ${fmt(parc)} até ${mesCurto(addMes(comp, n - 1))}`;
+    if ((S.tipo === 'Despesa' || S.tipo === 'Desconto') && data) {
+      const c = compDe(data, meio);
+      if (S.tipo === 'Desconto') h = `Abate ${v ? fmt(v) + ' ' : ''}da fatura de ${mesCurto(c.comp)}.`;
+      else {
+        h = c.cartao ? `Entra na fatura de ${mesCurto(c.comp)}` : `Entra em ${mesCurto(c.comp)}`;
+        const vp = n > 1 && $('fModo').value === 'total' ? v / n : v;
+        if (n > 1) h += ` · ${n}x de ${fmt(vp)} até ${mesCurto(addMes(c.comp, n - 1))}`;
+        if ($('fDiv').checked && v) h += ` · ${esp()}: ${fmt(vp * ((Number($('fPct').value) || 50) / 100))}${n > 1 ? '/mês' : ''}`;
       }
-      if ($('fDiv').checked && v) {
-        const pct = (Number($('fPct').value) || 50) / 100;
-        const base = n > 1 && $('fModo').value === 'parcela' ? v : (n > 1 ? v / n : v);
-        h += ` · Mariana: ${fmt(base * pct)}${n > 1 ? '/mês' : ''}`;
-      }
-    } else if (S.tipo === 'Desconto' && data) {
-      const f = S.init.config.fechamento[meio];
-      const [y, m, d] = data.split('-').map(Number);
-      let comp = `${y}-${String(m).padStart(2, '0')}-01`;
-      if (f && d >= f) comp = addMes(comp, 1);
-      h = `Abate ${v ? fmt(v) + ' ' : ''}da fatura de ${mesCurto(comp)}.`;
-    } else if (S.tipo === 'Acerto') {
-      h = 'Registra um valor que a Mariana vai te repassar, sem despesa sua.';
-    }
+    } else if (S.tipo === 'Acerto') h = `Valor que a ${esp()} vai te repassar, sem despesa sua.`;
     $('hint').textContent = h;
   }
-
   async function salvar() {
-    const valor = parseValor($('fValor').value);
-    const desc = $('fDesc').value.trim();
+    const valor = parseValor($('fValor').value), desc = $('fDesc').value.trim();
     if (!(valor > 0)) return toast('Informe o valor.', true);
     if (!desc && S.tipo !== 'Desconto') return toast('Informe a descrição.', true);
     const btn = $('btnSalvar'); btn.disabled = true; btn.textContent = 'Salvando…';
     try {
-      const r = await run('addTransaction', {
-        tipo: S.tipo, data: $('fData').value, descricao: desc, categoria: $('fCat').value, meio: $('fMeio').value,
-        valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked,
-        pctMariana: (Number($('fPct').value) || 50) / 100, pago: true
-      });
-      toast(r.ids.length > 1 ? `${r.ids.length} parcelas salvas (${mesCurto(r.competencias[0])} a ${mesCurto(r.competencias.at(-1))}).`
-                             : `Salvo em ${mesCurto(r.competencias[0])}.`);
-      S.init.sugestoes[desc] = { cat: $('fCat').value, meio: $('fMeio').value, mariana: $('fDiv').checked };
-      atualizarDatalist();
-      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false;
-      atualizarHint();
-      if (r.resumo.comp === S.mesAtual) { renderHeader(r.resumo); renderUltimos(r.resumo); }
-      else if (r.resumo.comp === addMes(S.mesAtual, 1)) renderUltimos(null, r.resumo);
-      if (S.mesVista === r.resumo.comp) renderMes(r.resumo);
-      S.painelSujo = true;
+      const r = await run('addTransaction', { tipo: S.tipo, data: $('fData').value, descricao: desc, categoria: $('fCat').value, meio: $('fMeio').value,
+        valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked, pctMariana: (Number($('fPct').value) || 50) / 100, pago: true });
+      const msg = r.ids.length > 1 ? `${r.ids.length} parcelas salvas (${mesCurto(r.competencias[0])} a ${mesCurto(r.competencias.at(-1))}).` : `Salvo em ${mesCurto(r.competencias[0])}.`;
+      toast(msg); $('ultimo').textContent = `Último: ${desc || 'Desconto'} · ${fmt(valor)} · ${msg}`;
+      if (desc) { S.init.sugestoes[desc] = { cat: $('fCat').value, meio: $('fMeio').value, mariana: $('fDiv').checked }; atualizarDatalist(); }
+      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false; atualizarHint();
+      if (r.resumo && r.resumo.comp === S.mes) { S.resumo = r.resumo; renderTopo(r.resumo); }
       $('fValor').focus();
-    } catch (e) {
-      toast(e.message || 'Não foi possível salvar.', true);
-    } finally {
-      btn.disabled = false; btn.textContent = 'Salvar lançamento';
-    }
+    } catch (e) { toast(e.message || 'Não foi possível salvar.', true); }
+    finally { btn.disabled = false; btn.textContent = 'Salvar lançamento'; }
   }
-
   function atualizarDatalist() {
-    $('dlDesc').innerHTML = Object.keys(S.init.sugestoes).sort((a, b) => a.localeCompare(b, 'pt-BR'))
-      .map(d => `<option value="${esc(d)}">`).join('');
+    $('dlDesc').innerHTML = Object.keys(S.init.sugestoes).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(d => `<option value="${esc(d)}">`).join('');
   }
-
   function aplicarSugestao() {
     if (!S.init) return;
     const s = S.init.sugestoes[$('fDesc').value.trim()];
     if (!s || S.tipo !== 'Despesa') return;
     if (s.cat && S.init.categoriasDespesa.includes(s.cat)) $('fCat').value = s.cat;
     if (s.meio && S.init.meios.includes(s.meio)) $('fMeio').value = s.meio;
-    $('fDiv').checked = !!s.mariana;
-    atualizarHint();
+    $('fDiv').checked = !!s.mariana; atualizarHint();
   }
 
-  function renderHeader(r) {
-    const mes = MESES[Number(r.comp.slice(5, 7)) - 1];
-    $('hMes').textContent = 'Quanto sobra em ' + mes + (r.comp === S.mesFoco && S.mesFoco !== S.mesHoje ? ' (próxima fatura)' : '');
-    $('hSaldo').textContent = fmt(r.sobraConta);
-    $('hEnt').textContent = 'Entradas ' + fmt(r.entradas);
-    $('hDes').textContent = 'Despesas ' + fmt(r.despesas);
-    $('hMar').textContent = (r.esposa || 'Mariana') + ' transfere ' + fmt(r.repasseLiquido !== undefined ? r.repasseLiquido : r.mariana);
-    const outro = S.mesAtual === S.mesFoco ? S.mesHoje : S.mesFoco;
-    $('btnMesHdr').classList.toggle('hidden', S.mesFoco === S.mesHoje);
-    $('btnMesHdr').textContent = 'Ver ' + MESES[Number(outro.slice(5, 7)) - 1];
-    $('hConta').innerHTML = (r.saldoInicialDefinido
-        ? `Saldo previsto na conta no fim de ${mes}: <b>${fmt(r.acumulado)}</b>`
-        : `Para ver o saldo da sua conta, informe o saldo inicial na planilha (aba Config).`)
-      + (r.sobraVale ? `<br>No vale: ${fmt(r.sobraVale)}` : '');
-  }
-
-  function itemHtml(x, completo, semMeio) {
-    const sub = [x.data ? x.data.split('-').reverse().slice(0, 2).join('/') : '', x.cat, semMeio ? '' : x.meio, x.parc].filter(Boolean).join(' · ');
-    const mar = x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : '';
+  // ---------- Histórico ----------
+  function itemHtml(x, semMeio) {
+    const sub = [x.data ? dataBr(x.data).slice(0, 5) : '', x.cat, semMeio ? '' : x.meio, x.parc].filter(Boolean).join(' · ');
+    const mar = x.mariana && x.cat !== 'Acerto Mariana' ? `<small>${esc(esp())} ${fmt(x.mariana)}</small>` : '';
     const val = x.tipo === 'Receita' ? `<div class="v rec">+${fmt(x.valor)}</div>`
       : x.cat === 'Acerto Mariana' ? `<div class="v rec">+${fmt(x.mariana)}<small>a receber</small></div>`
+      : x.valor < 0 ? `<div class="v rec">${fmt(x.valor)}<small>desconto</small></div>`
       : `<div class="v">${fmt(x.valor)}${mar}</div>`;
-    return `<div class="item">
-      ${completo ? `<button class="dot${x.pago ? ' on' : ''}" data-pago="${x.id}" aria-label="Pago"></button>` : ''}
-      <div class="main"${completo ? ` onclick="editarItem('${x.id}')"` : ''}><div class="t">${esc(String(x.desc).replace(/^Acerto Mariana: /, ''))}</div><div class="s">${esc(sub)}</div></div>
-      ${val}
-    </div>`;
+    return `<div class="item"><button class="dot${x.pago ? ' on' : ''}" data-pago="${esc(x.id)}" aria-label="Pago"></button>
+      <div class="main" onclick="editarItem('${esc(x.id)}')"><div class="t">${esc(String(x.desc).replace(/^Acerto Mariana: /, ''))}</div><div class="s">${esc(sub)}</div></div>${val}</div>`;
   }
-
-  // Divide os lançamentos do mês em grupos: receitas, fixas, cartões, pix/débito, vale e acertos
-  function grupos(r) {
-    const it = r.itens, soma = a => a.reduce((s, x) => s + (x.cat === 'Acerto Mariana' ? 0 : x.valor), 0);
-    const ehCartao = x => String(x.meio).indexOf('Cartão') === 0;
+  function renderHist(r) {
+    const it = r.itens || [], soma = a => a.reduce((s, x) => s + x.valor, 0);
     const rec = it.filter(x => x.tipo === 'Receita');
     const desp = it.filter(x => x.tipo === 'Despesa');
     const acertos = desp.filter(x => x.cat === 'Acerto Mariana');
     const resto = desp.filter(x => x.cat !== 'Acerto Mariana');
+    const descontos = resto.filter(x => x.valor < 0);
+    const cartao = resto.filter(x => ehCartao(x) && x.valor >= 0);
     const fixas = resto.filter(x => x.fixo && !ehCartao(x));
-    const cartao = resto.filter(x => ehCartao(x));
-    const vale = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio === 'Vale alimentação');
-    const avulsas = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio !== 'Vale alimentação');
-    const card = (titulo, sub, total, corpo) => `<div class="card"><div class="grp-h"><h3>${titulo}</h3>${total !== null ? `<b>${fmt(total)}</b>` : ''}</div>
+    const vale = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio === 'Vale alimentação' && x.valor >= 0);
+    const avulsas = resto.filter(x => !x.fixo && !ehCartao(x) && x.meio !== 'Vale alimentação' && x.valor >= 0);
+    const card = (id, titulo, sub, total, corpo) => `<div class="card" id="${id}"><div class="grp-h"><h3>${titulo}</h3>${total !== null ? `<b>${fmt(total)}</b>` : ''}</div>
       ${sub ? `<div class="grp-sub">${sub}</div>` : ''}${corpo}</div>`;
+    const prevLinha = x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">dia ${x.dia}${x.tipo === 'Despesa' ? ' · ' + esc(x.meio === 'Abatido do repasse' ? 'abatido do repasse' : x.cat) : ''}</div></div>
+      <div class="v${x.tipo === 'Receita' ? ' rec' : ''}">${x.tipo === 'Receita' ? '+' : ''}${fmt(x.valor)}</div></div>`;
+    const prev = r.fixosPrevistos || [];
+    const btnProv = `<div class="btnrow"><button class="pri" onclick="lancarProvisao('${r.comp}')">Lançar provisão de ${MESES[Number(r.comp.slice(5, 7)) - 1]}</button></div>`;
     let html = '';
-    if (rec.length) html += card('Entradas', '', soma(rec), rec.map(x => itemHtml(x, true)).join(''));
+    // Entradas
+    const prevRec = prev.filter(x => x.tipo === 'Receita');
+    if (rec.length) html += card('hist-entradas', 'Entradas', '', soma(rec), rec.map(x => itemHtml(x)).join(''));
+    else if (prevRec.length) html += card('hist-entradas', 'Entradas (previstas)', 'Ainda não lançadas.', soma(prevRec), prevRec.map(prevLinha).join(''));
+    else html += card('hist-entradas', 'Entradas', 'Nenhuma entrada neste mês.', 0, '');
+    // Saídas: resumo dos grupos
+    html += `<div class="card" id="hist-saidas"><div class="grp-h"><h3>Saídas do mês</h3><b>${fmt(r.despesas)}</b></div>
+      <div class="rowv"><span>Gastos fixos</span><b>${fmt(r.fixos)}</b></div>
+      <div class="rowv"><span>Cartão de crédito${r.descontos ? ' (já com descontos)' : ''}</span><b>${fmt(r.cartao)}</b></div>
+      ${avulsas.length ? `<div class="rowv"><span>Pix, débito e dinheiro</span><b>${fmt(soma(avulsas))}</b></div>` : ''}
+      ${vale.length ? `<div class="rowv"><span>Vale-alimentação</span><b>${fmt(soma(vale))}</b></div>` : ''}</div>`;
+    // Fixos
     if (fixas.length) {
       const aberto = soma(fixas.filter(x => !x.pago && x.meio !== 'Abatido do repasse'));
-      html += card('Despesas fixas', aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo para marcar como paga.` : 'Todas pagas.', soma(fixas),
-        fixas.map(x => itemHtml(x, true)).join(''));
-    } else if (r.fixosPrevistos && r.fixosPrevistos.length) {
-      const prevRec = r.fixosPrevistos.filter(x => x.tipo === 'Receita');
-      if (prevRec.length && !rec.length) html += card('Entradas (previstas)', 'Ainda não lançadas neste mês.', soma(prevRec),
-        prevRec.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">dia ${x.dia}</div></div><div class="v rec">+${fmt(x.valor)}</div></div>`).join(''));
-      const prev = r.fixosPrevistos.filter(x => x.tipo === 'Despesa');
-      html += card('Despesas fixas (previstas)', 'Ainda não lançadas neste mês. Lance a provisão para poder ajustar os valores.',
-        soma(prev), prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
-          <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('')
-        + `<div class="btnrow"><button class="pri" onclick="lancarProvisao('${r.comp}')">Lançar provisão de ${MESES[Number(r.comp.slice(5, 7)) - 1]}</button></div>`);
+      html += card('hist-fixos', 'Gastos fixos', aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo quando pagar e no nome para ajustar o valor.` : 'Todos pagos.', soma(fixas),
+        fixas.slice().sort((a, b) => a.pago - b.pago).map(x => itemHtml(x)).join(''));
+    } else {
+      const pd = prev.filter(x => x.tipo === 'Despesa');
+      if (pd.length || prevRec.length) html += card('hist-fixos', 'Gastos fixos (previstos)', 'Lance a provisão para poder ajustar o valor de cada um no mês.', soma(pd), pd.map(prevLinha).join('') + btnProv);
     }
-    if (cartao.length) {
-      const porCartao = {};
-      cartao.forEach(x => (porCartao[x.meio] = porCartao[x.meio] || []).push(x));
-      const totCart = Object.keys(porCartao).reduce((s, m) => { const f = (r.faturas || []).find(z => z.meio === m); return s + (f ? f.total : soma(porCartao[m])); }, 0);
-      html += card('Cartão de crédito', 'Faturas que vencem neste mês.', totCart, Object.keys(porCartao).map(m => {
-        const f = (r.faturas || []).find(z => z.meio === m) || { total: soma(porCartao[m]), aberto: 0 };
-        return `<div class="cardsub"><div><b>${esc(m)}</b> · ${fmt(f.total)}<div class="grp-sub">${f.aberto ? 'em aberto ' + fmt(f.aberto) : 'paga'}</div></div>
-          ${f.aberto ? `<button data-fat="${esc(m)}">Marcar como paga</button>` : ''}</div>` + porCartao[m].map(x => itemHtml(x, true, true)).join('');
-      }).join(''));
+    // Cartão, por cartão
+    const porCartao = {};
+    resto.filter(x => ehCartao(x)).forEach(x => (porCartao[x.meio] = porCartao[x.meio] || []).push(x));
+    const nomes = Object.keys(porCartao);
+    if (nomes.length) html += card('hist-cartao', 'Cartão de crédito', 'Faturas deste mês, já com os descontos.', r.cartao, nomes.map((m, k) => {
+      const l = porCartao[m].filter(x => x.valor >= 0);
+      const f = (r.faturas || []).find(z => z.meio === m) || { total: soma(porCartao[m]), aberto: 0 };
+      // A fatura do mês M fecha no dia de fechamento do próprio mês M (compras a partir desse dia vão para M+1)
+      const dia = (S.init.config.fechamento || {})[m] || 0;
+      const fechaEm = dia ? r.comp.slice(0, 8) + String(dia).padStart(2, '0') : '';
+      const st = !f.aberto ? ['paga', 'Paga'] : fechaEm && S.init.hoje >= fechaEm ? ['fechada', 'Fechada'] : ['aberta', 'Aberta'];
+      const nome = m.replace('Cartão ', '');
+      return `<div class="fat"><div class="fat-h"><div class="fat-ic" style="background:${COR_CAT[(k + 2) % COR_CAT.length]}">${esc(nome.slice(0, 2).toUpperCase())}</div>
+          <div class="nm">${esc(nome)}<small>${l.length} compra${l.length === 1 ? '' : 's'}</small></div><b>${fmt(f.total)}</b></div>
+        <div class="fat-meta"><div>Fechamento<b>${fechaEm ? dataBr(fechaEm).slice(0, 5) : '–'}</b></div><div>Em aberto<b>${fmt(f.aberto)}</b></div><div>Mês<b>${mesCurto(r.comp)}</b></div></div>
+        <div class="fat-f"><span class="badge b-${st[0]}">${st[1]}</span>${f.aberto ? `<button data-fat="${esc(m)}">✓ Registrar pagamento</button>` : ''}</div>
+        <details class="fat-l"${nomes.length === 1 ? ' open' : ''}><summary>Ver compras</summary>${l.slice().sort((a, b) => (b.data > a.data ? 1 : -1)).map(x => itemHtml(x, true)).join('')}</details></div>`;
+    }).join(''));
+    else html += card('hist-cartao', 'Cartão de crédito', 'Nenhuma compra nas faturas deste mês.', 0, '');
+    // Orçamento por categoria (tetos da aba Categorias), com a marca de "hoje" no mês corrente
+    const orc = (r.categorias || []).filter(c => c.teto > 0);
+    if (orc.length) {
+      const [y, mm] = r.comp.split('-').map(Number), diasMes = new Date(y, mm, 0).getDate();
+      const hojeFrac = r.comp === S.mesHoje ? Number(S.init.hoje.slice(8, 10)) / diasMes : null;
+      const tt = orc.reduce((s, c) => s + c.teto, 0), gg = orc.reduce((s, c) => s + c.mes, 0);
+      const linhaOrc = (nome, g, t, cor) => { const pc = g / t;
+        return `<div class="orc"><div class="top"><span>${esc(nome)}</span><b>${fmt(g)} <span style="color:var(--muted);font-weight:500">de ${fmt(t)}</span></b></div>
+          <div class="trk"><i style="width:${Math.min(100, pc * 100)}%;background:${pc > 1 ? 'var(--bad)' : cor}"></i>${hojeFrac !== null ? `<u style="left:${hojeFrac * 100}%" title="hoje"></u>` : ''}</div>
+          <div class="sub"><span>${Math.round(pc * 100)}%</span><span class="${t - g < 0 ? 'neg' : 'pos'}">${t - g < 0 ? 'passou ' + fmt(g - t) : 'resta ' + fmt(t - g)}</span></div></div>`; };
+      html += card('hist-orc', 'Orçamento do mês', hojeFrac !== null ? 'A marca vertical mostra quanto do mês já passou.' : '', null,
+        linhaOrc('Orçamento geral', gg, tt, 'var(--c-acc)') + orc.sort((a, b) => b.mes / b.teto - a.mes / a.teto).map((c, k) => linhaOrc(c.cat, c.mes, c.teto, COR_CAT[k % COR_CAT.length])).join(''));
     }
-    if (avulsas.length) html += card('Pix, débito e dinheiro', '', soma(avulsas), avulsas.map(x => itemHtml(x, true)).join(''));
-    if (vale.length) html += card('Vale-alimentação', '', soma(vale), vale.map(x => itemHtml(x, true, true)).join(''));
-    if (acertos.length) html += card('A receber da Mariana (avulsos)', '', acertos.reduce((s, x) => s + x.mariana, 0), acertos.map(x => itemHtml(x, true, true)).join(''));
-    if (r.mariana || r.abatimentos) {
-      const ab = it.filter(x => x.tipo === 'Despesa' && x.meio === 'Abatido do repasse');
-      html += card('Repasse da ' + esc(r.esposa || 'Mariana'), 'Contas que você paga abatendo do que ela te repassa (luz, internet...).', r.repasseLiquido,
-        `<div class="rowv"><span>Ela te deve no mês</span><b>${fmt(r.mariana)}</b></div>`
-        + ab.map(x => `<div class="rowv"><span>− ${esc(x.desc)}</span><b>${fmt(x.valor)}</b></div>`).join('')
-        + `<div class="rowv"><span><b>Ela transfere</b></span><b>${fmt(r.repasseLiquido)}</b></div>`);
-    }
-    return html || '<div class="card"><div class="s">Sem lançamentos neste mês.</div></div>';
+    if (descontos.length) html += card('hist-descontos', 'Descontos', 'Pontos e estornos que abatem a fatura.', soma(descontos), descontos.map(x => itemHtml(x)).join(''));
+    if (avulsas.length) html += card('hist-avulsas', 'Pix, débito e dinheiro', '', soma(avulsas), avulsas.map(x => itemHtml(x)).join(''));
+    if (vale.length) html += card('hist-vale', 'Vale-alimentação', r.sobraVale ? `Sobra no vale: ${fmt(r.sobraVale)}` : '', soma(vale), vale.map(x => itemHtml(x, true)).join(''));
+    // Mariana
+    const ab = resto.filter(x => x.meio === 'Abatido do repasse');
+    html += card('hist-mariana', 'Repasse da ' + esc(esp()), 'Parte dela nas despesas divididas, menos as contas abatidas.', r.repasseLiquido,
+      `<div class="rowv"><span>Parte dela no mês</span><b>${fmt(r.mariana + (r.abatimentos || 0))}</b></div>`
+      + ab.map(x => `<div class="rowv"><span>− ${esc(x.desc)} (abatido)</span><b>${fmt(x.valor)}</b></div>`).join('')
+      + `<div class="rowv"><span><b>Ela transfere</b></span><b>${fmt(r.repasseLiquido)}</b></div>`
+      + (acertos.length ? `<div class="grp-sub" style="margin-top:8px">Valores avulsos (já incluídos):</div>` + acertos.map(x => itemHtml(x, true)).join('') : ''));
+    $('hist').innerHTML = html + `<div class="btnrow" style="margin:-4px 0 12px"><button onclick="telaRecorrentes()">Gastos fixos e salário: valores padrão</button></div>`;
   }
-
+  function itensConhecidos() { return (S.resumo && S.resumo.itens) || []; }
   function editarItem(id) {
-    const fontes = [].concat(S.mesItens || [], (S.resumo && S.resumo.itens) || [], (S.resumoProx && S.resumoProx.itens) || []);
-    const x = fontes.find(i => i.id === id); if (!x) return;
+    const x = itensConhecidos().find(i => i.id === id); if (!x) return;
     const valor = x.cat === 'Acerto Mariana' ? x.mariana : Math.abs(x.valor);
-    abrirModal(`<div class="hd"><h2>${esc(x.desc)}</h2><button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button></div>
-      <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'despesa fixa' : ''].filter(Boolean).join(' · '))}</div>
-      <label>Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
-      ${x.fixo ? `<div class="toggle"><span>Usar este valor nos próximos meses</span><label class="sw" style="margin:0"><input type="checkbox" id="ePadrao"><i></i></label></div>
+    abrirModal(`${hd(String(x.desc).replace(/^Acerto Mariana: /, ''))}
+      <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'gasto fixo' : ''].filter(Boolean).join(' · '))}</div>
+      <label for="eValor">Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
+      ${x.fixo ? `<div class="toggle"><span>Usar este valor nos próximos meses</span><label class="sw"><input type="checkbox" id="ePadrao"><i></i></label></div>
         <div class="hint">Desligado: muda só este mês (ex.: provisão do aluguel ajustada no fim do mês). Ligado: vira o novo valor padrão.</div>` : ''}
-      <label>Descrição</label><input id="eDesc" value="${esc(x.desc)}">
-      <div class="toggle"><span>Pago</span><label class="sw" style="margin:0"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
+      <label for="eDesc">Descrição</label><input id="eDesc" value="${esc(x.desc)}">
+      <div class="toggle"><span>Pago</span><label class="sw"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
       <button class="btn" id="eSalvar">Salvar</button>
-      <div class="btnrow"><button class="dang" data-del="${x.id}" data-compra="${esc(x.compra)}">Excluir lançamento</button></div>`);
+      <div class="btnrow"><button class="dang" id="eDel">Excluir lançamento</button></div>`);
     $('eSalvar').onclick = async () => {
       const v = parseValor($('eValor').value);
       if (!(v >= 0)) return toast('Valor inválido.', true);
       const b = $('eSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
-        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked,
-          atualizarPadrao: !!($('ePadrao') && $('ePadrao').checked) });
-        fecharModal(); toast('Lançamento atualizado.'); S.painelSujo = true;
-        if (S.mesVista === r.comp) renderMes(r);
-        if (r.comp === S.mesAtual) { renderHeader(r); renderUltimos(r); }
-        else if (r.comp === addMes(S.mesAtual, 1)) renderUltimos(null, r);
+        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked, atualizarPadrao: !!($('ePadrao') && $('ePadrao').checked) });
+        fecharModal(); toast('Lançamento atualizado.');
+        if (r && r.comp === S.mes) { S.resumo = r; renderTopo(r); renderHist(r); } else carregarMes();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
+    $('eDel').onclick = () => confirmarExclusao(x);
   }
-
-  // Lançar: últimas compras no cartão (mês atual + fatura seguinte) e fixas do mês
-  function renderUltimos(r, prox) {
-    if (r) S.resumo = r;
-    if (prox) S.resumoProx = prox;
-    r = S.resumo; prox = S.resumoProx;
-    if (!r) return;
-    const vistos = new Set();
-    const cartao = r.itens.concat(prox ? prox.itens : [])
-      .filter(x => String(x.meio).indexOf('Cartão') === 0 && x.tipo === 'Despesa')
-      .sort((a, b) => (b.data > a.data ? 1 : b.data < a.data ? -1 : 0))
-      .filter(x => { const k = x.compra || x.id; if (vistos.has(k)) return false; vistos.add(k); return true; })
-      .slice(0, 10);
-    const linhaCartao = x => {
-      const fat = x.comp ? mesCurto(x.comp) : '';
-      const sub = [x.data ? x.data.split('-').reverse().slice(0, 2).join('/') : '', x.meio.replace('Cartão ', ''), x.parc ? x.parc.split('/')[1] + 'x' : ''].filter(Boolean).join(' · ');
-      return `<div class="item"><div class="main"><div class="t">${esc(x.desc)}</div><div class="s">${esc(sub)}</div></div>
-        <div class="v">${fmt(x.valor)}${x.parc ? '<small>por parcela</small>' : ''}</div></div>`;
+  function confirmarExclusao(x) {
+    abrirModal(`${hd('Excluir lançamento')}<div class="hint">${esc(x.desc)} · ${fmt(Math.abs(x.valor || x.mariana))}</div>
+      <div class="btnrow"><button class="dang" id="d1">Excluir só este${x.parc ? ' (parcela ' + esc(x.parc) + ')' : ''}</button>
+      ${x.compra ? '<button class="dang" id="d2">Excluir todas as parcelas</button>' : ''}<button onclick="fecharModal()">Cancelar</button></div>`);
+    const exec = async todas => {
+      try { const r = await run('deleteTransaction', x.id, todas); fecharModal(); toast(r.removidos + ' lançamento(s) excluído(s).'); carregarMes(); }
+      catch (e) { toast(e.message, true); }
     };
-    $('ultCartao').className = '';
-    $('ultCartao').innerHTML = cartao.length ? cartao.map(linhaCartao).join('') : '<div class="s" style="color:var(--muted)">Nenhuma compra no cartão ainda.</div>';
-
-    const fixas = r.itens.filter(x => x.fixo && x.tipo === 'Despesa');
-    const entradasFixas = r.itens.filter(x => x.fixo && x.tipo === 'Receita');
-    $('ultFixas').className = '';
-    if (fixas.length) {
-      const total = fixas.reduce((s, x) => s + x.valor, 0), aberto = fixas.filter(x => !x.pago && x.meio !== 'Abatido do repasse').reduce((s, x) => s + x.valor, 0);
-      $('tFixas').textContent = 'Fixas e salário de ' + MESES[Number(r.comp.slice(5, 7)) - 1];
-      $('totFixas').textContent = fmt(total);
-      $('subFixas').textContent = aberto ? `Falta pagar ${fmt(aberto)}. Toque no círculo quando pagar.` : 'Todas pagas.';
-      $('ultFixas').innerHTML = entradasFixas.map(x => `<div class="item"><div class="main" onclick="editarItem('${x.id}')"><div class="t">${esc(x.desc)}</div>
-          <div class="s">entrada · toque para ajustar</div></div><div class="v rec">+${fmt(x.valor)}</div></div>`).join('')
-        + fixas.sort((a, b) => a.pago - b.pago).map(x => `<div class="item">
-        <button class="dot${x.pago ? ' on' : ''}" data-pago="${x.id}" aria-label="Pago"></button>
-        <div class="main" onclick="editarItem('${x.id}')"><div class="t">${esc(x.desc)}</div><div class="s">${esc(x.meio === 'Abatido do repasse' ? 'abatido do repasse' : x.cat)}</div></div>
-        <div class="v">${fmt(x.valor)}${x.mariana ? `<small>Mariana ${fmt(x.mariana)}</small>` : ''}</div></div>`).join('')
-        + `<div class="btnrow"><button onclick="telaRecorrentes()">Valores padrão</button></div>`;
-    } else {
-      const prev = (r.fixosPrevistos || []).filter(x => x.tipo === 'Despesa');
-      $('totFixas').textContent = prev.length ? fmt(prev.reduce((s, x) => s + x.valor, 0)) : '';
-      $('subFixas').textContent = prev.length ? 'Previstas: ainda não lançadas neste mês.' : '';
-      $('ultFixas').innerHTML = (prev.length ? prev.map(x => `<div class="item prev"><div class="main"><div class="t">${esc(x.desc)}</div>
-        <div class="s">dia ${x.dia} · ${esc(x.cat)}</div></div><div class="v">${fmt(x.valor)}</div></div>`).join('')
-        + `<div class="btnrow"><button class="pri" onclick="lancarProvisao('${r.comp}')">Lançar provisão para ajustar valores</button></div>`
-        : '<div class="s" style="color:var(--muted)">Nenhuma despesa fixa cadastrada.</div>')
-        + `<div class="btnrow"><button onclick="telaRecorrentes()">Valores padrão</button></div>`;
-    }
+    $('d1').onclick = () => exec(false);
+    if ($('d2')) $('d2').onclick = () => exec(true);
+  }
+  async function lancarProvisao(comp) {
+    try {
+      const r = await run('gerarFixasMes', comp);
+      toast(r.ok ? 'Provisão lançada. Toque em cada gasto fixo para ajustar o valor do mês.' : r.msg);
+      if (r.resumo && comp === S.mes) { S.resumo = r.resumo; renderTopo(r.resumo); renderHist(r.resumo); }
+    } catch (e) { toast(e.message, true); }
   }
 
-  function renderMes(r) {
-    S.mesVista = r.comp;
-    const t = mesNome(r.comp); $('mTitulo').textContent = t[0].toUpperCase() + t.slice(1);
-    S.mesItens = r.itens;
-    $('kEnt').textContent = fmt(r.entradas);
-    $('kDes').textContent = fmt(r.despesas);
-    $('kMar').textContent = fmt(r.repasseLiquido !== undefined ? r.repasseLiquido : r.mariana);
-    $('kInv').textContent = fmt((r.aplicacoes || 0) - (r.resgates || 0));
-    $('kConta').innerHTML = `<span class="${r.sobraConta < 0 ? 'neg' : 'pos'}">${fmt(r.sobraConta)}</span>`;
-    $('kAcum').innerHTML = r.saldoInicialDefinido ? `<span class="${r.acumulado < 0 ? 'neg' : 'pos'}">${fmt(r.acumulado)}</span>` : '<span style="font-size:13px;color:var(--muted)">informe o saldo inicial</span>';
-    $('kExpl').innerHTML = `<b>Sobra em conta</b> = entradas + repasse da Mariana − despesas − investido no mês${r.sobraVale ? `, sem contar o que sobrou no vale (${fmt(r.sobraVale)})` : ''}. `
-      + `<b>Saldo previsto na conta</b> = quanto você terá na conta no fim do mês, somando todas as sobras desde o saldo inicial.`
-      + (r.situacao === 'Previsto' ? ' Mês futuro: valores previstos.' : '');
-    $('grupos').innerHTML = grupos(r) + `<div class="btnrow" style="margin:-4px 0 12px"><button onclick="telaRecorrentes()">Fixas e salário: valores padrão</button></div>`;
-    const max = Math.max(1, ...r.categorias.map(c => c.valor));
-    $('cats').innerHTML = r.categorias.length ? r.categorias.map(c => `<div class="bar"><span>${esc(c.cat)}</span><b>${fmt(c.valor)}</b>
-      <div class="track"><div class="fill" style="width:${Math.max(2, c.valor / max * 100)}%"></div></div></div>`).join('')
-      : '<div class="s">Sem despesas neste mês.</div>';
+  // ---------- Gastos fixos e salário (valores padrão) ----------
+  async function telaRecorrentes(lista) {
+    abrirModal(`${hd('Gastos fixos e salário')}<div class="hint">Valores padrão usados a cada mês. Para mudar só um mês, toque no lançamento no Histórico.</div><div id="recs"><div class="loading">Carregando…</div></div>`);
+    try { lista = lista || await run('getRecorrentes'); } catch (e) { return toast(e.message, true); }
+    S.recs = lista; if (!$('recs')) return;
+    const linha = x => `<div class="item${x.ativo ? '' : ' prev'}"><div class="main" onclick="formRecorrente(${x.row})"><div class="t">${esc(x.desc)}</div>
+      <div class="s">${esc([x.tipo === 'Receita' ? 'entrada' : x.cat, x.meio, 'dia ' + x.dia, x.pct ? esp() + ' ' + Math.round(x.pct * 100) + '%' : '', x.fim ? 'até ' + mesCurto(x.fim) : '', x.ativo ? '' : 'pausada'].filter(Boolean).join(' · '))}</div></div>
+      <div class="v${x.tipo === 'Receita' ? ' rec' : ''}">${x.tipo === 'Receita' ? '+' : ''}${fmt(x.valor)}</div></div>`;
+    const rec = lista.filter(x => x.tipo === 'Receita'), des = lista.filter(x => x.tipo !== 'Receita');
+    $('recs').innerHTML = `<div class="card"><h3>Entradas fixas</h3>${rec.map(linha).join('') || '<div class="hint">Nenhuma.</div>'}
+        <div class="btnrow"><button onclick="formRecorrente(0,'Receita')">+ Nova entrada fixa</button></div></div>
+      <div class="card"><h3>Gastos fixos</h3>${des.map(linha).join('') || '<div class="hint">Nenhum.</div>'}
+        <div class="btnrow"><button onclick="formRecorrente(0,'Despesa')">+ Novo gasto fixo</button></div></div>`;
   }
-
-  async function abrirMes(iso) {
-    $('grupos').innerHTML = '<div class="loading">Carregando…</div>';
-    try { renderMes(await run('getMonthSummary', iso)); } catch (e) { toast(e.message, true); }
-  }
-
-  function trocarAba(aba) {
-    $('tabLancar').classList.toggle('hidden', aba !== 'lancar');
-    $('tabMes').classList.toggle('hidden', aba !== 'mes');
-    $('tabPainel').classList.toggle('hidden', aba !== 'painel');
-    $('tabInv').classList.toggle('hidden', aba !== 'inv');
-    $('nInv').classList.toggle('on', aba === 'inv');
-    $('nLancar').classList.toggle('on', aba === 'lancar');
-    $('nMes').classList.toggle('on', aba === 'mes');
-    $('nPainel').classList.toggle('on', aba === 'painel');
-    if (aba === 'mes' && !S.mesVista) abrirMes(S.mesAtual);
-    if (aba === 'painel' && (!S.painel || S.painelSujo)) abrirPainel();
-    if (aba === 'inv' && !S.inv) abrirInv();
-    window.scrollTo(0, 0);
-  }
-
-  document.addEventListener('click', async e => {
-    const b = e.target.closest('button'); if (!b) return;
-    if (b.closest('#segTipo')) return setTipo(b.dataset.v);
-    if (b.dataset.pago) {
-      try { const v = await run('togglePago', b.dataset.pago); b.classList.toggle('on', v === true); } catch (er) { toast(er.message, true); }
-      return;
-    }
-    if (b.dataset.del) {
-      const todas = !!b.dataset.compra && confirm('Esta compra é parcelada. Excluir TODAS as parcelas?');
-      if (!todas && !confirm(b.dataset.compra ? 'Excluir só esta parcela?' : 'Excluir este lançamento?')) return;
-      try { const r = await run('deleteTransaction', b.dataset.del, !!todas); fecharModal(); toast(r.removidos + ' lançamento(s) excluído(s).'); S.painelSujo = true; abrirMes(S.mesVista); recarregarAtual(); }
-      catch (er) { toast(er.message, true); }
-      return;
-    }
-    if (b.dataset.fat) {
-      try { renderMes(await run('pagarFatura', b.dataset.fat, S.mesVista)); toast('Fatura marcada como paga.'); } catch (er) { toast(er.message, true); }
-    }
-  });
-
-  // ---------- Painel ----------
-  const fmt0 = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(Math.round(v)).toLocaleString('pt-BR');
-  const kfmt = v => { const a = Math.abs(v); return (v < 0 ? '-' : '') + (a >= 1000 ? (a / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k' : Math.round(a)); };
-  const mesAbrev = ym => { const [y, m] = ym.split('-').map(Number); return MESES[m - 1].slice(0, 3) + (m === 1 ? '/' + String(y).slice(2) : ''); };
-
-  // Colunas agrupadas em SVG. series: [{key, cor}]
-  function colunas(dados, series, opts = {}) {
-    const W = 340, H = 170, pl = 30, pb = 22, pt = 14;
-    const vals = dados.flatMap(d => series.map(s => d[s.key]));
-    const max = Math.max(1, ...vals), min = Math.min(0, ...vals);
-    const y = v => pt + (max - v) / (max - min) * (H - pt - pb);
-    const slot = (W - pl) / dados.length, bw = Math.min(14, (slot - 6) / series.length);
-    let g = '';
-    [max, (max + min) / 2, min].forEach(t => g += `<line x1="${pl}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${pl - 4}" y="${y(t) + 3}" text-anchor="end">${kfmt(t)}</text>`);
-    dados.forEach((d, i) => {
-      const x0 = pl + i * slot + (slot - bw * series.length) / 2;
-      series.forEach((s, j) => {
-        const v = d[s.key], cor = typeof s.cor === 'function' ? s.cor(v) : s.cor;
-        const ya = y(Math.max(v, 0)), yb = y(Math.min(v, 0));
-        g += `<rect x="${x0 + j * bw}" y="${ya}" width="${bw - 1.5}" height="${Math.max(1, yb - ya)}" rx="2" fill="${cor}" opacity="${d.prev ? .45 : 1}"><title>${esc(s.nome || '')} ${fmt(v)}</title></rect>`;
-        if (opts.rotulos) g += `<text class="lbl" x="${x0 + j * bw + bw / 2}" y="${ya - 3}" text-anchor="middle">${kfmt(v)}</text>`;
-      });
-      g += `<text x="${pl + i * slot + slot / 2}" y="${H - 6}" text-anchor="middle"${d.atual ? ' class="lbl"' : ''}>${mesAbrev(d.comp)}</text>`;
-    });
-    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg></div>`;
-  }
-
-  function renderPainel(d) {
-    S.painel = d; S.painelSujo = false;
-    const m = d.mes || { ent: 0, des: 0, mar: 0, saldo: 0, acum: 0 };
-    const hist = d.ultimos12.map(r => ({ comp: r.comp, entra: r.ent + r.mar, sai: r.des, atual: r.comp + '-01' === d.atual }));
-    const prev = d.proximos6.map(r => ({ comp: r.comp, saldo: r.conta }));
-    const media6 = d.ultimos12.filter(r => r.comp + '-01' < d.atual).slice(-6);
-    const mediaDes = media6.length ? media6.reduce((s, r) => s + r.des, 0) / media6.length : 0;
-    const varDes = mediaDes ? (m.des - mediaDes) / mediaDes : 0;
-    const maxCat = Math.max(1, ...d.categorias.map(c => Math.max(c.mes, c.media, c.teto || 0)));
-
-    $('painel').innerHTML = `
-      <div class="kpis" style="margin-bottom:12px">
-        <div class="kpi"><small>Sobra em conta em ${MESES[Number(d.atual.slice(5, 7)) - 1]}</small><b class="${m.conta < 0 ? 'neg' : 'pos'}">${fmt(m.conta)}</b></div>
-        <div class="kpi"><small>Despesas vs média 6m</small><b class="${varDes > 0 ? 'up' : 'down'}">${varDes > 0 ? '+' : ''}${Math.round(varDes * 100)}%</b></div>
-        <div class="kpi"><small>Poupança em ${d.ano.ano}</small><b class="${d.ano.poupanca < 0 ? 'neg' : 'pos'}">${(d.ano.poupanca * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</b></div>
-        <div class="kpi"><small>Parcelas a vencer</small><b>${fmt0(d.parcelasTotal)}</b></div>
+  function formRecorrente(row, tipoNovo) {
+    const x = row ? S.recs.find(r => r.row === row) : { desc: '', tipo: tipoNovo, cat: tipoNovo === 'Receita' ? 'Salário' : 'Moradia', meio: 'Pix/Débito', valor: 0, dia: 1, pct: 0, inicio: S.mes, fim: '', ativo: true };
+    const cats = x.tipo === 'Receita' ? S.init.categoriasReceita : S.init.categoriasDespesa;
+    abrirModal(`${hd(row ? x.desc : (x.tipo === 'Receita' ? 'Nova entrada fixa' : 'Novo gasto fixo'))}
+      <label for="rDesc">Descrição</label><input id="rDesc" value="${esc(x.desc)}">
+      <label for="rValor">Valor padrão (R$)</label><input id="rValor" class="valor moeda" inputmode="numeric" value="${num2(x.valor)}">
+      <div class="two">
+        <div><label for="rCat">Categoria</label><select id="rCat">${cats.map(c => `<option${c === x.cat ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+        <div><label for="rMeio">Pagamento</label><select id="rMeio">${S.init.meios.map(m => `<option${m === x.meio ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div>
       </div>
-
-      <div class="card"><h3>Entradas x despesas, 12 meses</h3>
-        ${colunas(hist, [{ key: 'entra', cor: 'var(--c-ent)', nome: 'Entradas + repasse' }, { key: 'sai', cor: 'var(--c-des)', nome: 'Despesas' }])}
-        <div class="legend"><span><i style="background:var(--c-ent)"></i>Entradas + repasse da Mariana</span><span><i style="background:var(--c-des)"></i>Despesas</span></div>
+      <div class="two">
+        <div><label for="rDia">Dia</label><input id="rDia" type="number" inputmode="numeric" min="1" max="28" value="${x.dia}"></div>
+        ${x.tipo === 'Receita' ? '<div></div>' : `<div><label for="rPct">Parte da ${esc(esp())} (%)</label><input id="rPct" type="number" inputmode="numeric" min="0" max="100" value="${Math.round(x.pct * 100)}"></div>`}
       </div>
-
-      ${prev.length ? `<div class="card"><h3>Sobra em conta prevista, próximos meses</h3>
-        ${colunas(prev, [{ key: 'saldo', cor: v => v < 0 ? 'var(--c-des)' : 'var(--c-ent)', nome: 'Saldo previsto' }], { rotulos: true })}
-        <div class="s" style="font-size:12px;color:var(--muted);margin-top:4px">Fixos da aba Recorrentes + parcelas já lançadas. Gastos do dia a dia ainda não entram.</div>
-      </div>` : ''}
-
-      <div class="card"><h3>Categorias no mês</h3>
-        ${d.categorias.map(c => {
-          const lim = c.teto || 0, over = lim ? c.mes > lim : c.mes > c.media * 1.15 && c.media > 0;
-          const dif = c.media ? Math.round((c.mes - c.media) / c.media * 100) : null;
-          return `<div class="cbar"><div class="top"><span>${esc(c.cat)}</span><span>${fmt0(c.mes)}</span></div>
-            <div class="track"><div class="fill${over ? ' over' : ''}" style="width:${Math.min(100, c.mes / maxCat * 100)}%"></div>
-            ${c.media ? `<div class="avg" style="left:${Math.min(99, c.media / maxCat * 100)}%" title="Média 6 meses"></div>` : ''}</div>
-            <div class="sub">média ${fmt0(c.media)}${dif !== null ? ` (<span class="${dif > 0 ? 'up' : 'down'}">${dif > 0 ? '+' : ''}${dif}%</span>)` : ''}${lim ? ` · teto ${fmt0(lim)} (${Math.round(c.mes / lim * 100)}%)` : ''}</div></div>`;
-        }).join('') || '<div class="s">Sem despesas neste mês.</div>'}
-        <div class="legend"><span><i style="background:var(--c-avg);width:3px"></i>Média dos 6 meses anteriores</span></div>
+      ${x.tipo === 'Receita' ? '' : `<div class="hint">Use o pagamento "Abatido do repasse" para contas que você paga descontando do repasse dela (luz, internet).</div>`}
+      <div class="two">
+        <div><label for="rIni">Começa em</label><input id="rIni" type="month" value="${(x.inicio || S.mes).slice(0, 7)}"></div>
+        <div><label for="rFim">Termina em</label><input id="rFim" type="month" value="${(x.fim || '').slice(0, 7)}"></div>
       </div>
-
-      <div class="card"><h3>Maiores gastos do mês</h3>
-        ${d.maiores.map(x => `<div class="rowv"><span>${esc(x.desc)}${x.parc ? ' <span style="color:var(--muted)">' + esc(x.parc) + '</span>' : ''}</span><b>${fmt(x.valor)}</b></div>`).join('') || '<div class="s">Nada ainda.</div>'}
-      </div>
-
-      ${d.parcelas.length ? `<div class="card"><h3>Parcelas já assumidas</h3>
-        ${d.parcelas.map(p => `<div class="rowv"><span>${mesCurto(p.comp + '-01')}</span><b>${fmt(p.valor)}</b></div>`).join('')}
-      </div>` : ''}
-
-      ${d.patrimonio && d.patrimonio.total ? `<div class="card"><h3>Patrimônio investido</h3>
-        <div class="rowv"><span>Total</span><b>${fmt(d.patrimonio.total)}</b></div>
-        <div class="rowv"><span>Sua parte</span><b>${fmt(d.patrimonio.minhaParte)}</b></div>
-        <div class="rowv"><span>Resultado acumulado</span><b class="${d.patrimonio.resultado < 0 ? 'neg' : 'pos'}">${fmt(d.patrimonio.resultado)}</b></div>
-        ${d.patrimonio.porTipo.map(t => `<div class="rowv"><span style="color:var(--muted)">${esc(t.tipo)}</span><span>${fmt(t.valor)}</span></div>`).join('')}
-        ${d.patrimonio.reserva.meta ? `<div style="margin-top:10px;font-size:13px;color:var(--muted)">Reserva: ${fmt(d.patrimonio.reserva.valor)} de ${fmt(d.patrimonio.reserva.meta)}</div>
-          <div class="prog"><i style="width:${Math.min(100, d.patrimonio.reserva.pct * 100)}%"></i></div>` : ''}
-      </div>` : ''}
-
-      <div class="card"><h3>Vale-alimentação</h3>
-        <div class="rowv"><span>Saldo estimado no cartão do vale</span><b class="${d.vale < 0 ? 'neg' : 'pos'}">${fmt(d.vale)}</b></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Créditos do vale menos gastos lançados com "Vale alimentação" como pagamento.</div>
-      </div>
-
-      <div class="card"><h3>Ano de ${d.ano.ano}</h3>
-        <div class="rowv"><span>Entradas</span><b>${fmt(d.ano.entradas)}</b></div>
-        <div class="rowv"><span>Repasse da Mariana</span><b>${fmt(d.ano.mariana)}</b></div>
-        <div class="rowv"><span>Despesas</span><b>${fmt(d.ano.despesas)}</b></div>
-        <div class="rowv"><span>Resultado do ano até agora</span><b class="${d.ano.saldoRealizado < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldoRealizado)}</b></div>
-        <div class="rowv"><span>Resultado previsto do ano</span><b class="${d.ano.saldo < 0 ? 'neg' : 'pos'}">${fmt(d.ano.saldo)}</b></div>
-        <div class="rowv"><span>Saldo previsto na conta (fim do mês)</span><b class="${m.acum < 0 ? 'neg' : 'pos'}">${fmt(m.acum)}</b></div>
-      </div>`;
-  }
-
-  async function abrirPainel() {
-    if (!S.painel) $('painel').innerHTML = '<div class="loading">Carregando…</div>';
-    try { renderPainel(await run('getDashboard', S.mesAtual)); } catch (e) { toast(e.message, true); }
+      <div class="toggle"><span>Ativo</span><label class="sw"><input type="checkbox" id="rOn"${x.ativo ? ' checked' : ''}><i></i></label></div>
+      <button class="btn" id="rSalvar">Salvar</button>
+      <div class="btnrow"><button onclick="telaRecorrentes(S.recs)">Voltar</button>${row ? `<button class="dang" id="rDel">Excluir</button>` : ''}</div>`);
+    $('rSalvar').onclick = async () => {
+      const b = $('rSalvar'); b.disabled = true; b.textContent = 'Salvando…';
+      try {
+        const l = await run('saveRecorrente', { row: row || 0, desc: $('rDesc').value, tipo: x.tipo, cat: $('rCat').value, meio: $('rMeio').value,
+          valor: parseValor($('rValor').value) || 0, dia: $('rDia').value, pct: $('rPct') ? (Number($('rPct').value) || 0) / 100 : 0,
+          inicio: $('rIni').value ? $('rIni').value + '-01' : '', fim: $('rFim').value ? $('rFim').value + '-01' : '', ativo: $('rOn').checked });
+        toast('Salvo. Vale a partir da próxima provisão.'); telaRecorrentes(l);
+      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
+    };
+    if ($('rDel')) $('rDel').onclick = async () => {
+      try { telaRecorrentes(await run('deleteRecorrente', row)); toast('Excluído. Os lançamentos já feitos continuam.'); } catch (e) { toast(e.message, true); }
+    };
   }
 
   // ---------- Investimentos ----------
-  const TIPOS = ['Ação', 'FII', 'Renda fixa', 'Reserva', 'Outro'];
-  const ehBolsa = t => t === 'Ação' || t === 'FII';
-  function abrirModal(html) { $('sheet').innerHTML = html; $('ovl').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
-  function fecharModal() { $('ovl').classList.add('hidden'); $('sheet').innerHTML = ''; document.body.style.overflow = ''; }
-  const hd = t => `<div class="hd"><h2>${esc(t)}</h2><button class="x" onclick="fecharModal()" aria-label="Fechar">✕</button></div>`;
-
-  async function abrirInv() {
-    try { renderInv(await run('getInvestimentos')); } catch (e) { toast(e.message, true); }
+  const TIPOS = ['Reserva', 'Renda fixa', 'Ação', 'FII', 'Outro'];
+  const TIPOS_TIT = { 'Reserva': 'Reserva de emergência', 'Renda fixa': 'Renda fixa', 'Ação': 'Ações', 'FII': 'Fundos imobiliários', 'Outro': 'Outros' };
+  async function abrirInv() { try { renderInv(await run('getInvestimentos')); } catch (e) { toast(e.message, true); } }
+  // Parte de uma pessoa ('eu' ou 'esposa') em um ativo; null se não for dela
+  function parte(a, p) {
+    const dono = a.titular === 'Conjunta' ? 'conj' : a.titular === S.inv.esposa ? 'esposa' : 'eu';
+    if (dono !== 'conj' && dono !== p) return null;
+    const valor = dono === 'conj' ? (a[p] || 0) : a.valor;
+    const aplicado = dono === 'conj' ? (p === 'eu' ? a.aplicadoEu : a.aplicadoEsposa) : a.investido;
+    const fator = a.valor ? valor / a.valor : 0;
+    return { valor, aplicado: aplicado || 0, rend: valor - (aplicado || 0) + (dono === 'conj' ? 0 : a.proventos || 0),
+             liquido: (a.liquido || a.valor) * fator, conj: dono === 'conj', pct: fator };
   }
-
   function renderInv(d) {
-    S.inv = d; S.painelSujo = true;
+    S.inv = d;
     if (d.avisoCdi) toast(d.avisoCdi, true);
-    const esp = d.esposa;
-    const ativos = d.ativos.filter(a => a.ativo), inativos = d.ativos.filter(a => !a.ativo);
-    const r = d.reserva;
-    const res = ativos.filter(a => a.tipo === 'Reserva');
-    const sub = a => {
+    const p = S.pessoa, nome = p === 'eu' ? 'Você' : d.esposa;
+    document.querySelectorAll('#segPessoa button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+    const ativos = d.ativos.filter(a => a.ativo).map(a => ({ a, x: parte(a, p) })).filter(o => o.x && (!o.x.conj || o.x.valor || o.x.aplicado));
+    const tot = ativos.reduce((s, o) => ({ valor: s.valor + o.x.valor, aplicado: s.aplicado + o.x.aplicado, liquido: s.liquido + o.x.liquido, rend: s.rend + o.x.rend }),
+      { valor: 0, aplicado: 0, liquido: 0, rend: 0 });
+    const detalhe = (a, x) => {
       if (ehBolsa(a.tipo)) {
         const pm = a.qtd ? a.investido / a.qtd : 0, varp = pm && a.cotacao ? (a.cotacao / pm - 1) : null;
-        return `${a.qtd} ${a.tipo === 'FII' ? 'cotas' : 'ações'}${a.cotacao ? ' · ' + fmt(a.cotacao) : ''}${varp !== null ? ` · <span class="${varp < 0 ? 'neg' : 'pos'}">${varp >= 0 ? '+' : ''}${(varp * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>` : ''}`;
+        return `${a.qtd} ${a.tipo === 'FII' ? 'cotas' : 'ações'} · pago ${fmt(pm)} · hoje ${a.cotacao ? fmt(a.cotacao) : '–'}${varp !== null ? ` · <span class="${varp < 0 ? 'neg' : 'pos'}">${varp >= 0 ? '+' : ''}${(varp * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>` : ''}`
+          + (x.conj ? ` · conjunta (${Math.round(x.pct * 100)}%)` : '');
       }
-      return esc([a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : a.indexador === 'Prefixado' ? num2(a.taxa) + '% a.a.' : '', a.liquidez ? 'liquidez ' + a.liquidez.toLowerCase() : '', a.inst].filter(Boolean).join(' · '));
+      return esc([a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : a.indexador === 'Prefixado' ? num2(a.taxa) + '% a.a.' : 'saldo informado', a.liquidez ? 'liquidez ' + a.liquidez.toLowerCase() : '', a.inst,
+        x.conj ? 'conjunta · ' + Math.round(x.pct * 100) + '% ' + (p === 'eu' ? 'seu' : 'dela') : ''].filter(Boolean).join(' · '));
     };
-    const item = a => `<div class="asset" onclick="abrirAtivo('${a.id}')">
-        <div class="main"><div class="t">${esc(a.nome)}${ehBolsa(a.tipo) && a.codigo && a.codigo !== String(a.nome).toUpperCase() ? ' <span class="tag">' + esc(a.codigo) + '</span>' : ''}</div>
-          <div class="s">${sub(a)}</div></div>
-        <div class="v">${fmt(a.valor)}<small class="${a.resultado < 0 ? 'neg' : 'pos'}">${a.resultado >= 0 ? '+' : ''}${fmt(a.resultado)}</small></div></div>`;
-    const grupo = (titulo, lista) => lista.length ? `<div class="card"><h3>${titulo}</h3>${lista.map(item).join('')}</div>` : '';
-    const pessoa = (nome, p) => `<div class="kpi pessoa"><span class="nm">${esc(nome)}</span><span class="vl">${fmt(p.valor)}</span>
-      <span class="sb">aplicou ${fmt(p.aplicado)} · rendeu <span class="${p.valor - p.aplicado < 0 ? 'neg' : 'pos'}">${fmt(p.valor - p.aplicado)}</span></span></div>`;
+    const item = o => `<div class="item"><div class="main" onclick="abrirAtivo('${o.a.id}')"><div class="t">${esc(o.a.nome)}</div><div class="s">${detalhe(o.a, o.x)}</div></div>
+      <div class="v">${fmt(o.x.valor)}<small class="${o.x.rend < 0 ? 'neg' : 'pos'}">${o.x.rend >= 0 ? '+' : ''}${fmt(o.x.rend)}</small></div></div>`;
+    const secoes = TIPOS.map(t => {
+      const l = ativos.filter(o => o.a.tipo === t); if (!l.length) return '';
+      const v = l.reduce((s, o) => s + o.x.valor, 0), ap = l.reduce((s, o) => s + o.x.aplicado, 0), rd = l.reduce((s, o) => s + o.x.rend, 0);
+      return `<div class="card"><div class="grp-h"><h3>${TIPOS_TIT[t]}</h3><b>${fmt(v)}</b></div>
+        <div class="grp-sub">aplicado ${fmt(ap)} · ${ehBolsa(t) ? 'resultado' : 'rendimento'} <span class="${rd < 0 ? 'neg' : 'pos'}">${fmt(rd)}</span></div>${l.map(item).join('')}</div>`;
+    }).join('');
+    const r = d.reserva, res = d.ativos.find(a => a.ativo && a.tipo === 'Reserva');
     $('inv').innerHTML = `
-      <div style="display:grid;gap:10px;margin-bottom:12px">
-        ${pessoa('Você', d.pessoas.eu)}
-        ${pessoa(esp, d.pessoas.esposa)}
-        <div class="hint" style="margin:0 2px">Total investido pelos dois: <b>${fmt(d.total)}</b>${d.liquido && Math.abs(d.liquido - d.total) > 0.009 ? ` · líquido de IR/IOF estimado: <b>${fmt(d.liquido)}</b>` : ''}</div>
+      <div class="card"><div class="grp-h"><h3>Relatório · ${esc(nome)}</h3><b>${fmt(tot.valor)}</b></div>
+        <div class="kpis" style="margin-top:8px">
+          <div class="kpi"><small>Aplicado</small><b>${fmt(tot.aplicado)}</b></div>
+          <div class="kpi"><small>Rendimento</small><b class="${tot.rend < 0 ? 'neg' : 'pos'}">${fmt(tot.rend)}</b></div>
+          <div class="kpi"><small>Se resgatar hoje</small><b>${fmt(tot.liquido)}</b></div>
+          <div class="kpi"><small>Rentabilidade</small><b class="${tot.rend < 0 ? 'neg' : 'pos'}">${tot.aplicado ? (tot.rend / tot.aplicado * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '%' : '–'}</b></div>
+        </div>
+        <div class="hint">"Se resgatar hoje" já desconta IR e IOF estimados da renda fixa. Investimentos conjuntos entram pela parte de cada um.</div>
       </div>
-
-      <div class="card"><h3>Reserva de emergência</h3>
-        ${res.length ? `
-          <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:22px">${fmt(r.valor)}</b>
-            <span style="color:var(--muted);font-size:13px">${r.meta ? 'meta ' + fmt(r.meta) : 'sem meta'}</span></div>
-          ${r.meta ? `<div class="prog"><i style="width:${Math.min(100, r.pct * 100)}%"></i></div>
-            <div style="font-size:13px;color:var(--muted)">${Math.round(r.pct * 100)}% da meta · faltam ${fmt(Math.max(0, r.meta - r.valor))}</div>` : ''}
-          <div class="split"><div>Sua parte<b>${fmt(r.euValor)}</b>aplicou ${fmt(r.eu)}</div><div>${esc(esp)}<b>${fmt(r.esposaValor)}</b>aplicou ${fmt(r.esposa)}</div></div>
-          <div class="btnrow">
-            ${res.length === 1 ? `<button class="pri" onclick="formMov('${res[0].id}','Aplicação')">Aportar</button>
-            <button onclick="formMov('${res[0].id}','Resgate')">Resgatar</button><button onclick="abrirAtivo('${res[0].id}')">Detalhes</button>` : ''}
-            <button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button>
-          </div>`
-        : `<div style="color:var(--muted);font-size:14px">Cadastre a conta conjunta do C6 para acompanhar a reserva.</div>
-           <div class="btnrow"><button class="pri" onclick="formAtivo(null,{nome:'Reserva de emergência',tipo:'Reserva',inst:'C6',titular:'Conjunta',indexador:'CDI',taxa:101.05,liquidez:'Diária'})">Criar reserva no C6</button>
-           <button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button></div>`}
-      </div>
-
-      ${grupo('Seus investimentos', ativos.filter(a => a.titular === 'Eu'))}
-      ${grupo('Conjuntos', ativos.filter(a => a.titular === 'Conjunta' && a.tipo !== 'Reserva'))}
-      ${grupo('Da ' + esc(esp), ativos.filter(a => a.titular === esp))}
-      <div class="btnrow" style="margin-bottom:12px"><button class="pri" onclick="formAtivo()">+ Novo investimento</button></div>
-      ${grupo('Encerrados', inativos)}`;
+      ${res ? `<div class="card"><div class="grp-h"><h3>Meta da reserva (total do casal)</h3><b>${fmt(r.valor)}</b></div>
+          ${r.meta ? `<div class="prog"><i style="width:${Math.min(100, r.pct * 100)}%"></i></div><div class="grp-sub">${Math.round(r.pct * 100)}% de ${fmt(r.meta)} · faltam ${fmt(Math.max(0, r.meta - r.valor))}</div>` : '<div class="grp-sub">Sem meta definida.</div>'}
+          <div class="btnrow"><button class="pri" onclick="formMov('${res.id}','Aplicação')">Aportar</button><button onclick="formMov('${res.id}','Resgate')">Resgatar</button><button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button></div></div>` : ''}
+      ${secoes || `<div class="card"><div class="hint">Nenhum investimento ${p === 'eu' ? 'seu' : 'da ' + esc(d.esposa)} ainda.</div></div>`}
+      <div class="btnrow" style="margin-bottom:12px"><button class="pri" id="btnNovoAtivo">+ Novo investimento</button></div>
+      ${d.ativos.some(a => !a.ativo) ? `<div class="card"><h3>Encerrados</h3>${d.ativos.filter(a => !a.ativo).map(a => `<div class="item prev"><div class="main" onclick="abrirAtivo('${a.id}')"><div class="t">${esc(a.nome)}</div><div class="s">${esc(a.tipo)}</div></div></div>`).join('')}</div>` : ''}`;
+    $('btnNovoAtivo').onclick = () => formAtivo(null, { titular: p === 'eu' ? 'Eu' : d.esposa });
   }
-
   function formAtivo(id, pre) {
-    const esp = S.inv.esposa;
+    const es = S.inv.esposa;
     const a = id ? S.inv.ativos.find(x => x.id === id) : Object.assign({ nome: '', tipo: 'Renda fixa', inst: '', titular: 'Eu', codigo: '', ativo: true,
       indexador: 'CDI', taxa: 100, liquidez: 'Diária', vencimento: '', isentoIR: false }, pre || {});
     const opt = (v, atual, rot) => `<option value="${esc(v)}"${v === atual ? ' selected' : ''}>${esc(rot || v)}</option>`;
     abrirModal(`${hd(id ? 'Editar investimento' : 'Novo investimento')}
       <div class="two">
-        <div><label>Tipo</label><select id="aTipo">${TIPOS.map(t => opt(t, a.tipo)).join('')}</select></div>
-        <div><label>De quem é</label><select id="aTit">${opt('Eu', a.titular, 'Meu')}${opt('Conjunta', a.titular, 'Conjunta')}${opt(esp, a.titular, 'Da ' + esp)}</select></div>
+        <div><label for="aTipo">Tipo</label><select id="aTipo">${['Renda fixa', 'Reserva', 'Ação', 'FII', 'Outro'].map(t => opt(t, a.tipo)).join('')}</select></div>
+        <div><label for="aTit">De quem é</label><select id="aTit">${opt('Eu', a.titular, 'Meu')}${opt(es, a.titular, 'Da ' + es)}${opt('Conjunta', a.titular, 'Conjunta')}</select></div>
       </div>
-      <div id="boxCod"><label>Código na B3</label><input id="aCod" value="${esc(a.codigo)}" placeholder="Ex.: PETR4, ITSA4, HGLG11" autocapitalize="characters" autocomplete="off">
+      <div id="boxCod"><label for="aCod">Código na B3</label><input id="aCod" value="${esc(a.codigo)}" placeholder="Ex.: PETR4, ITSA4, HGLG11" autocapitalize="characters" autocomplete="off">
         <div class="hint">O valor de mercado é atualizado sozinho pelo Google Finance (com cerca de 20 min de atraso).</div></div>
-      <label>Nome</label><input id="aNome" value="${esc(a.nome)}" placeholder="Ex.: CDB C6, Petrobras">
-      <label>Instituição / corretora</label><input id="aInst" value="${esc(a.inst)}" placeholder="Ex.: C6, XP, Inter">
+      <label for="aNome">Nome</label><input id="aNome" value="${esc(a.nome)}" placeholder="Ex.: CDB C6, Tesouro Selic">
+      <label for="aInst">Instituição / corretora</label><input id="aInst" value="${esc(a.inst)}" placeholder="Ex.: C6, XP, Inter">
       <div id="boxRF">
         <div class="two">
-          <div><label>Rentabilidade</label><select id="aIdx">${opt('CDI', a.indexador, '% do CDI')}${opt('Prefixado', a.indexador, 'Prefixado (% a.a.)')}${opt('Manual', a.indexador || 'Manual', 'Atualizo o saldo')}</select></div>
-          <div id="boxTaxa"><label id="lblTaxa">Taxa</label><input id="aTaxa" class="moeda" inputmode="numeric" value="${a.taxa ? num2(a.taxa) : ''}" placeholder="101,05"></div>
+          <div><label for="aIdx">Rentabilidade</label><select id="aIdx">${opt('CDI', a.indexador, '% do CDI')}${opt('Prefixado', a.indexador, 'Prefixado (% a.a.)')}${opt('Manual', a.indexador || 'Manual', 'Atualizo o saldo')}</select></div>
+          <div id="boxTaxa"><label for="aTaxa" id="lblTaxa">Taxa</label><input id="aTaxa" class="moeda" inputmode="numeric" value="${a.taxa ? num2(a.taxa) : ''}" placeholder="101,05"></div>
         </div>
         <div class="two">
-          <div><label>Liquidez</label><select id="aLiq">${opt('Diária', a.liquidez)}${opt('No vencimento', a.liquidez)}</select></div>
-          <div><label>Vencimento (opcional)</label><input id="aVenc" type="date" value="${a.vencimento || ''}"></div>
+          <div><label for="aLiq">Liquidez</label><select id="aLiq">${opt('Diária', a.liquidez)}${opt('No vencimento', a.liquidez)}</select></div>
+          <div><label for="aVenc">Vencimento</label><input id="aVenc" type="date" value="${a.vencimento || ''}"></div>
         </div>
-        <div class="toggle"><span>Isento de IR (LCI, LCA, poupança)</span><label class="sw" style="margin:0"><input type="checkbox" id="aIsento"${a.isentoIR ? ' checked' : ''}><i></i></label></div>
+        <div class="toggle"><span>Isento de IR (LCI, LCA, poupança)</span><label class="sw"><input type="checkbox" id="aIsento"${a.isentoIR ? ' checked' : ''}><i></i></label></div>
         <div class="hint" id="hintRF"></div>
       </div>
-      ${!id ? `<div id="boxCompra"><div class="card" style="margin-top:12px"><h3>Primeira compra</h3>
-        <div class="two"><div><label>Data</label><input id="cData" type="date" value="${S.init.hoje}"></div>
-          <div><label>Quantidade</label><input id="cQtd" type="number" inputmode="numeric" min="1" step="1"></div></div>
-        <label>Preço pago por ação (R$)</label><input id="cPreco" class="valor moeda" inputmode="numeric" placeholder="0,00">
-        <div class="hint" id="cTot"></div></div></div>` : ''}
-      ${id ? `<div class="toggle"><span>Em carteira</span><label class="sw" style="margin:0"><input type="checkbox" id="aOn"${a.ativo ? ' checked' : ''}><i></i></label></div>
+      ${!id ? `<div class="card" style="margin-top:12px"><h3 id="tPrim">Primeira aplicação</h3>
+        <div class="two"><div><label for="cData">Data</label><input id="cData" type="date" value="${S.init.hoje}"></div>
+          <div id="boxQtd"><label for="cQtd">Quantidade</label><input id="cQtd" type="number" inputmode="numeric" min="1" step="1"></div></div>
+        <label for="cPreco" id="lblPreco">Valor aplicado (R$)</label><input id="cPreco" class="valor moeda" inputmode="numeric" placeholder="0,00">
+        <div id="boxQuem"><label>Quem colocou o dinheiro</label><div class="seg" id="cQuem" style="grid-template-columns:1fr 1fr"><button data-q="Eu" class="on">Eu</button><button data-q="${esc(es)}">${esc(es)}</button></div></div>
+        <div class="hint" id="cTot">Pode deixar em branco e lançar depois.</div></div>` : ''}
+      ${id ? `<div class="toggle"><span>Em carteira</span><label class="sw"><input type="checkbox" id="aOn"${a.ativo ? ' checked' : ''}><i></i></label></div>
         <div class="hint">Desligue quando encerrar: o histórico fica guardado, mas sai dos totais.</div>` : ''}
       <button class="btn" id="aSalvar">Salvar</button>
-      ${id ? `<div class="btnrow"><button class="dang" onclick="excluirAtivo('${id}')">Excluir investimento e histórico</button></div>` : ''}`);
+      ${id ? `<div class="btnrow"><button class="dang" id="aDel">Excluir investimento e histórico</button></div>` : ''}`);
     const sync = () => {
       const bolsa = ehBolsa($('aTipo').value), idx = $('aIdx').value;
       $('boxCod').classList.toggle('hidden', !bolsa);
       $('boxRF').classList.toggle('hidden', bolsa);
-      if ($('boxCompra')) $('boxCompra').classList.toggle('hidden', !bolsa);
       $('boxTaxa').classList.toggle('hidden', idx === 'Manual');
       $('lblTaxa').textContent = idx === 'CDI' ? 'Taxa (% do CDI)' : 'Taxa (% ao ano)';
       $('hintRF').textContent = idx === 'Manual' ? 'O valor acompanha o saldo que você informar em "Atualizar saldo".'
-        : 'O rendimento é calculado todo dia com o CDI oficial do Banco Central' + (idx === 'Prefixado' ? ' (dias úteis)' : '') + ', já mostrando o IR'
-          + ($('aIsento').checked ? '' : ' regressivo (22,5% a 15%)') + ' e o IOF dos primeiros 30 dias. É uma estimativa: confira com o banco de vez em quando com "Atualizar saldo".';
-      if ($('cTot')) { const q = Number($('cQtd').value) || 0, p = parseValor($('cPreco').value) || 0; $('cTot').textContent = q && p ? 'Total: ' + fmt(q * p) : ''; }
+        : 'Rendimento calculado com o CDI oficial do Banco Central, já com IR' + ($('aIsento').checked ? ' isento' : ' regressivo (22,5% a 15%)') + ' e IOF dos primeiros 30 dias. É uma estimativa: confira com o banco usando "Atualizar saldo".';
+      if ($('cPreco')) {
+        $('boxQtd').classList.toggle('hidden', !bolsa);
+        $('tPrim').textContent = bolsa ? 'Primeira compra' : 'Primeira aplicação';
+        $('lblPreco').textContent = bolsa ? 'Preço pago por ação (R$)' : 'Valor aplicado (R$)';
+        $('boxQuem').classList.toggle('hidden', $('aTit').value !== 'Conjunta');
+        const q = Number($('cQtd').value) || 0, pr = parseValor($('cPreco').value) || 0;
+        $('cTot').textContent = bolsa && q && pr ? 'Total: ' + fmt(q * pr) : 'Pode deixar em branco e lançar depois.';
+      }
     };
-    ['aTipo', 'aIdx', 'aIsento'].forEach(k => $(k).addEventListener('change', sync));
+    ['aTipo', 'aIdx', 'aIsento', 'aTit'].forEach(k => $(k).addEventListener('change', sync));
     if ($('cQtd')) { $('cQtd').addEventListener('input', sync); $('cPreco').addEventListener('input', sync); }
+    document.querySelectorAll('#cQuem button').forEach(b => b.onclick = () => document.querySelectorAll('#cQuem button').forEach(x => x.classList.toggle('on', x === b)));
     $('aCod').addEventListener('input', () => { if (!id && !$('aNome').dataset.edit) $('aNome').value = $('aCod').value.toUpperCase(); });
     $('aNome').addEventListener('input', () => $('aNome').dataset.edit = '1');
     sync();
+    if ($('aDel')) $('aDel').onclick = () => {
+      abrirModal(`${hd('Excluir investimento')}<div class="hint">Isso apaga "${esc(a.nome)}" e todas as movimentações dele. Se só encerrou o investimento, prefira desligar "Em carteira".</div>
+        <div class="btnrow"><button class="dang" id="xSim">Excluir</button><button onclick="abrirAtivo('${id}')">Cancelar</button></div>`);
+      $('xSim').onclick = async () => { try { renderInv(await run('deleteAsset', id)); fecharModal(); toast('Investimento excluído.'); carregarMes(); } catch (e) { toast(e.message, true); } };
+    };
     $('aSalvar').onclick = async () => {
-      const bolsa = ehBolsa($('aTipo').value);
-      const nome = ($('aNome').value || $('aCod').value).trim();
-      const q = $('cQtd') ? Number($('cQtd').value) || 0 : 0, p = $('cPreco') ? parseValor($('cPreco').value) || 0 : 0;
+      const bolsa = ehBolsa($('aTipo').value), nome = ($('aNome').value || $('aCod').value).trim();
+      const q = $('cQtd') ? Number($('cQtd').value) || 0 : 0, pr = $('cPreco') ? parseValor($('cPreco').value) || 0 : 0;
+      if (!nome) return toast('Informe o nome.', true);
       if (!id && bolsa && !$('aCod').value.trim()) return toast('Informe o código na B3.', true);
-      if (!id && bolsa && (!q || !p)) return toast('Informe a quantidade e o preço da primeira compra.', true);
+      if (!id && bolsa && pr && !q) return toast('Informe a quantidade comprada.', true);
       const b = $('aSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
         let d = await run('saveAsset', { id: id || '', nome, tipo: $('aTipo').value, inst: $('aInst').value, titular: $('aTit').value,
@@ -886,85 +811,76 @@
           liquidez: $('aLiq').value, vencimento: $('aVenc').value, isentoIR: $('aIsento').checked });
         const novo = id ? d.ativos.find(x => x.id === id) : d.ativos.filter(x => x.nome === nome).pop();
         let movs;
-        if (!id && bolsa && novo) {
-          const r = await run('saveMov', { ativoId: novo.id, op: 'Compra', data: $('cData').value, valor: Math.round(q * p * 100) / 100, qtd: q,
-            quem: $('aTit').value === S.inv.esposa ? S.inv.esposa : 'Eu' });
-          d = r.inv; movs = r.movs;
+        if (!id && novo && pr > 0) {
+          const qb = document.querySelector('#cQuem button.on');
+          const quem = $('aTit').value === 'Conjunta' ? (qb ? qb.dataset.q : 'Eu') : $('aTit').value === es ? es : 'Eu';
+          const rr = await run('saveMov', bolsa ? { ativoId: novo.id, op: 'Compra', data: $('cData').value, valor: Math.round(q * pr * 100) / 100, qtd: q, quem }
+            : { ativoId: novo.id, op: 'Aplicação', data: $('cData').value, valor: pr, quem });
+          d = rr.inv; movs = rr.movs;
         }
-        renderInv(d); toast('Investimento salvo.');
+        renderInv(d); toast('Investimento salvo.'); carregarMes();
         if (novo) abrirAtivo(novo.id, movs); else fecharModal();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
   }
-
-  async function excluirAtivo(id) {
-    const a = S.inv.ativos.find(x => x.id === id);
-    if (!confirm(`Excluir "${a.nome}" e todas as movimentações dele? Isso não pode ser desfeito.\n\nSe só encerrou o investimento, prefira desligar "Ativo em carteira".`)) return;
-    try { renderInv(await run('deleteAsset', id)); fecharModal(); toast('Ativo excluído.'); } catch (e) { toast(e.message, true); }
-  }
-
   async function abrirAtivo(id, movs) {
     const a = S.inv.ativos.find(x => x.id === id); if (!a) return fecharModal();
     S.ativoAtual = id;
     const ops = ehBolsa(a.tipo) ? S.inv.opsBolsa : S.inv.opsOutros;
     const rot = { 'Compra': 'Comprar', 'Venda': 'Vender', 'Provento': 'Provento', 'Aplicação': 'Aplicar', 'Resgate': 'Resgatar', 'Atualização de saldo': 'Atualizar saldo' };
+    const es = S.inv.esposa;
     abrirModal(`${hd(a.nome)}
-      <div class="s" style="color:var(--muted);margin-bottom:10px"><span class="tag">${esc(a.tipo)}</span>${esc([a.codigo, a.inst, a.titular === 'Conjunta' ? 'conjunta' : a.titular === S.inv.esposa ? 'da ' + S.inv.esposa : '',
+      <div class="hint" style="margin:0 0 10px"><span class="tag">${esc(a.tipo)}</span>${esc([a.codigo, a.inst, a.titular === 'Conjunta' ? 'conjunta' : a.titular === es ? 'da ' + es : 'seu',
         a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : a.indexador === 'Prefixado' ? num2(a.taxa) + '% a.a.' : '', a.liquidez ? 'liquidez ' + a.liquidez.toLowerCase() : '',
-        a.vencimento ? 'vence ' + a.vencimento.split('-').reverse().join('/') : '', a.isentoIR ? 'isento de IR' : ''].filter(Boolean).join(' · '))}</div>
+        a.vencimento ? 'vence ' + dataBr(a.vencimento) : '', a.isentoIR ? 'isento de IR' : ''].filter(Boolean).join(' · '))}</div>
       <div class="kpis">
         <div class="kpi"><small>${ehBolsa(a.tipo) ? 'Valor de mercado' : a.estimado ? 'Valor bruto (estimado)' : 'Valor atual'}</small><b>${fmt(a.valor)}</b></div>
         <div class="kpi"><small>Rendimento</small><b class="${a.resultado < 0 ? 'neg' : 'pos'}">${fmt(a.resultado)}</b></div>
         <div class="kpi"><small>Aplicado</small><b>${fmt(a.investido)}</b></div>
         ${ehBolsa(a.tipo) ? `<div class="kpi"><small>${a.qtd} × cotação</small><b>${a.cotacao ? fmt(a.cotacao) : '–'}</b></div>`
-          : a.estimado ? `<div class="kpi"><small>Se resgatar hoje (líquido)</small><b>${fmt(a.liquido)}</b></div>`
-          : `<div class="kpi"><small>Saldo atualizado em</small><b style="font-size:15px">${a.atualizado ? a.atualizado.split('-').reverse().join('/') : 'nunca'}</b></div>`}
+          : a.estimado ? `<div class="kpi"><small>Se resgatar hoje</small><b>${fmt(a.liquido)}</b></div>`
+          : `<div class="kpi"><small>Saldo atualizado em</small><b style="font-size:15px">${a.atualizado ? dataBr(a.atualizado) : 'nunca'}</b></div>`}
       </div>
-      ${a.estimado ? `<div class="hint">Estimativa de ${a.estimadoEm ? a.estimadoEm.split('-').reverse().join('/') : 'hoje'}: IR ${fmt(a.ir)}${a.iof ? ' · IOF ' + fmt(a.iof) : ''}. Para corrigir pelo valor exato do banco, use "Atualizar saldo".</div>` : ''}
-      ${!ehBolsa(a.tipo) && !a.estimado ? '<div class="hint">Para o valor acompanhar o rendimento, use "Atualizar saldo" com o saldo do app do banco, ou edite o investimento e informe a taxa.</div>' : ''}
+      ${a.estimado ? `<div class="hint">Estimativa de ${a.estimadoEm ? dataBr(a.estimadoEm) : 'hoje'}: IR ${fmt(a.ir)}${a.iof ? ' · IOF ' + fmt(a.iof) : ''}. O CDI de cada dia útil é publicado no dia seguinte.</div>` : ''}
       ${ehBolsa(a.tipo) && !a.cotacao && a.qtd ? '<div class="hint">Sem cotação automática para este código. Confira se é o código exato da B3 (ex.: PETR4).</div>' : ''}
-      ${a.titular === 'Conjunta' ? `<div class="split"><div>Sua parte<b>${fmt(a.eu)}</b>aplicou ${fmt(a.aplicadoEu)}</div><div>${esc(S.inv.esposa)}<b>${fmt(a.esposa)}</b>aplicou ${fmt(a.aplicadoEsposa)}</div></div>` : ''}
-      <div class="btnrow">${ops.map((o, i) => `<button class="${i === 0 ? 'pri' : ''}" onclick="formMov('${id}','${o}')">${rot[o]}</button>`).join('')}</div>
+      ${a.titular === 'Conjunta' ? `<div class="split"><div>Sua parte<b>${fmt(a.eu)}</b>aplicou ${fmt(a.aplicadoEu)}</div><div>${esc(es)}<b>${fmt(a.esposa)}</b>aplicou ${fmt(a.aplicadoEsposa)}</div></div>` : ''}
+      <div class="btnrow">${ops.map((o, i) => `<button class="${i === 0 ? 'pri' : ''}" onclick="formMov('${id}','${o}')">${rot[o] || o}</button>`).join('')}</div>
       <div class="card" style="margin-top:12px"><h3>Movimentações</h3><div id="movs">${movs ? '' : '<div class="loading">Carregando…</div>'}</div></div>
-      <div class="btnrow"><button onclick="formAtivo('${id}')">Editar ativo</button></div>`);
+      <div class="btnrow"><button onclick="formAtivo('${id}')">Editar investimento</button></div>`);
     if (!movs) { try { movs = await run('getMovimentacoes', id); } catch (e) { return toast(e.message, true); } }
     if (S.ativoAtual !== id || !$('movs')) return;
     S.movs = movs;
     $('movs').innerHTML = movs.length ? movs.map(m => `<div class="item">
-        <div class="main" onclick="formMov('${id}','${m.op}','${m.id}')" style="cursor:pointer"><div class="t">${esc(m.op)}${m.qtd ? ' · ' + m.qtd + ' cotas' : ''}</div>
-          <div class="s">${m.data.split('-').reverse().join('/')}${a.titular === 'Conjunta' ? ' · ' + esc(m.quem === 'Eu' ? 'você' : m.quem) : ''}${m.qtd && m.valor ? ' · ' + fmt(m.valor / m.qtd) + '/un.' : ''}${m.obs ? ' · ' + esc(m.obs) : ''}</div></div>
-        <div class="v${m.op === 'Resgate' || m.op === 'Venda' ? '' : ' rec'}">${m.op === 'Resgate' || m.op === 'Venda' ? '-' : m.op === 'Atualização de saldo' ? '=' : '+'}${fmt(m.valor)}</div>
-        <button class="del" onclick="excluirMov('${m.id}','${id}')" aria-label="Excluir">✕</button></div>`).join('')
-      : '<div style="color:var(--muted);font-size:14px">Nenhuma movimentação ainda.</div>';
+        <div class="main" onclick="formMov('${id}','${m.op}','${m.id}')"><div class="t">${esc(m.op)}${m.qtd ? ' · ' + m.qtd + ' un.' : ''}</div>
+          <div class="s">${dataBr(m.data)}${a.titular === 'Conjunta' ? ' · ' + esc(m.quem === 'Eu' ? 'você' : m.quem) : ''}${m.qtd && m.valor ? ' · ' + fmt(m.valor / m.qtd) + '/un.' : ''}${m.obs ? ' · ' + esc(m.obs) : ''}</div></div>
+        <div class="v${m.op === 'Resgate' || m.op === 'Venda' ? '' : ' rec'}">${m.op === 'Resgate' || m.op === 'Venda' ? '-' : m.op === 'Atualização de saldo' ? '=' : '+'}${fmt(m.valor)}</div></div>`).join('')
+      : '<div class="hint">Nenhuma movimentação ainda.</div>';
   }
-
   function formMov(ativoId, op, movId) {
-    const a = S.inv.ativos.find(x => x.id === ativoId);
+    const a = S.inv.ativos.find(x => x.id === ativoId), es = S.inv.esposa;
     const m = movId ? (S.movs || []).find(x => x.id === movId) : null;
     const ops = ehBolsa(a.tipo) ? S.inv.opsBolsa : S.inv.opsOutros;
     abrirModal(`${hd((m ? 'Editar · ' : '') + a.nome)}
-      <label>Operação</label><select id="mOp">${ops.map(o => `<option${o === (m ? m.op : op) ? ' selected' : ''}>${o}</option>`).join('')}</select>
+      <label for="mOp">Operação</label><select id="mOp">${ops.map(o => `<option${o === (m ? m.op : op) ? ' selected' : ''}>${o}</option>`).join('')}</select>
       <div class="two">
-        <div><label>Data</label><input id="mData" type="date" value="${m ? m.data : S.init.hoje}"></div>
-        <div id="boxQtd"><label>Quantidade</label><input id="mQtd" type="number" inputmode="decimal" min="0" step="any" value="${m && m.qtd ? m.qtd : ''}"></div>
+        <div><label for="mData">Data</label><input id="mData" type="date" value="${m ? m.data : S.init.hoje}"></div>
+        <div id="boxMQtd"><label for="mQtd">Quantidade</label><input id="mQtd" type="number" inputmode="numeric" min="0" step="any" value="${m && m.qtd ? m.qtd : ''}"></div>
       </div>
-      <label id="lblValor">Valor (R$)</label><input id="mValor" class="valor moeda" inputmode="numeric" placeholder="0,00" value="${m ? num2(m.valor) : ''}">
+      <label for="mValor" id="lblValor">Valor (R$)</label><input id="mValor" class="valor moeda" inputmode="numeric" placeholder="0,00" value="${m ? num2(m.valor) : ''}">
       ${a.titular === 'Conjunta' ? `<label>Quem colocou o dinheiro</label>
-        <div class="seg" id="mQuem" style="grid-template-columns:1fr 1fr">
-          <button data-q="Eu" class="${!m || m.quem !== S.inv.esposa ? 'on' : ''}">Eu</button>
-          <button data-q="${esc(S.inv.esposa)}" class="${m && m.quem === S.inv.esposa ? 'on' : ''}">${esc(S.inv.esposa)}</button></div>` : ''}
-      <label>Observação (opcional)</label><input id="mObs" value="${m ? esc(m.obs || '') : ''}">
+        <div class="seg" id="mQuem" style="grid-template-columns:1fr 1fr"><button data-q="Eu" class="${!m || m.quem !== es ? 'on' : ''}">Eu</button><button data-q="${esc(es)}" class="${m && m.quem === es ? 'on' : ''}">${esc(es)}</button></div>` : ''}
+      <label for="mObs">Observação (opcional)</label><input id="mObs" value="${m ? esc(m.obs || '') : ''}">
       <div class="hint" id="mHint"></div>
       <button class="btn" id="mSalvar">${m ? 'Salvar alterações' : 'Salvar'}</button>
-      <div class="btnrow"><button onclick="abrirAtivo('${ativoId}')">Voltar</button></div>`);
+      <div class="btnrow"><button onclick="abrirAtivo('${ativoId}')">Voltar</button>${m ? '<button class="dang" id="mDel">Excluir</button>' : ''}</div>`);
     const sync = () => {
       const o = $('mOp').value;
-      $('boxQtd').classList.toggle('hidden', !(o === 'Compra' || o === 'Venda'));
+      $('boxMQtd').classList.toggle('hidden', !(o === 'Compra' || o === 'Venda'));
       $('lblValor').textContent = o === 'Atualização de saldo' ? 'Saldo atual no banco (R$)' : o === 'Compra' || o === 'Venda' ? 'Valor total da operação (R$)' : 'Valor (R$)';
-      $('mHint').textContent = o === 'Atualização de saldo' ? 'Informe o saldo que aparece hoje no app do banco. Isso não mexe no seu fluxo de caixa.'
-        : o === 'Provento' ? 'Dividendos, JCP ou rendimentos recebidos. Entram no resultado do ativo.'
-        : (o === 'Aplicação' || o === 'Compra') ? (a.titular === S.inv.esposa ? 'Investimento da ' + S.inv.esposa + ': não mexe no seu fluxo de caixa.' : a.titular === 'Conjunta' ? 'O que você aportar sai da sua "sobra em conta" no fluxo de caixa; o que a ' + S.inv.esposa + ' aportar, não.' : 'Sai da sua "sobra em conta" no fluxo de caixa do mês.')
-        : 'Volta para a sua "sobra em conta" no fluxo de caixa do mês.';
+      $('mHint').textContent = o === 'Atualização de saldo' ? 'Informe o saldo que aparece hoje no app do banco. Não mexe no fluxo de caixa.'
+        : o === 'Provento' ? 'Dividendos, JCP ou rendimentos recebidos.'
+        : (o === 'Aplicação' || o === 'Compra') ? (a.titular === es ? `Investimento da ${es}: não mexe no seu fluxo de caixa.` : 'Não entra na "sobra do salário", mas sai da sua conta.')
+        : 'Volta para a conta.';
     };
     $('mOp').onchange = sync; sync();
     document.querySelectorAll('#mQuem button').forEach(b => b.onclick = () => document.querySelectorAll('#mQuem button').forEach(x => x.classList.toggle('on', x === b)));
@@ -975,143 +891,230 @@
       const b = $('mSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
         const r = await run('saveMov', { id: movId || '', ativoId, op: $('mOp').value, data: $('mData').value, valor,
-          qtd: parseValor($('mQtd').value || '0'), quem: q ? q.dataset.q : (a.titular === S.inv.esposa ? S.inv.esposa : 'Eu'), obs: $('mObs').value });
-        renderInv(r.inv); toast('Movimentação salva.'); abrirAtivo(ativoId, r.movs);
+          qtd: Number($('mQtd').value) || 0, quem: q ? q.dataset.q : (a.titular === es ? es : 'Eu'), obs: $('mObs').value });
+        renderInv(r.inv); toast('Movimentação salva.'); abrirAtivo(ativoId, r.movs); carregarMes();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
-  }
-
-  async function excluirMov(movId, ativoId) {
-    if (!confirm('Excluir esta movimentação?')) return;
-    try { const r = await run('deleteMov', movId, ativoId); renderInv(r.inv); toast('Movimentação excluída.'); abrirAtivo(ativoId, r.movs); }
-    catch (e) { toast(e.message, true); }
-  }
-
-  function formMeta() {
-    const r = S.inv.reserva;
-    abrirModal(`${hd('Meta da reserva')}
-      <label>Meta (R$)</label><input id="metaV" class="valor moeda" inputmode="numeric" value="${r.meta ? num2(r.meta) : ''}" placeholder="0,00">
-      <div class="hint">Referência comum: de 3 a 6 meses do custo de vida de vocês dois.</div>
-      <button class="btn" id="metaS">Salvar meta</button>`);
-    $('metaS').onclick = async () => {
-      try { renderInv(await run('setMetaReserva', parseValor($('metaV').value) || 0)); fecharModal(); toast('Meta salva.'); }
+    if ($('mDel')) $('mDel').onclick = async () => {
+      try { const r = await run('deleteMov', movId, ativoId); renderInv(r.inv); toast('Movimentação excluída.'); abrirAtivo(ativoId, r.movs); carregarMes(); }
       catch (e) { toast(e.message, true); }
     };
   }
-
-  // ---------- Fixas e salário ----------
-  async function lancarProvisao(comp) {
-    try {
-      const r = await run('gerarFixasMes', comp);
-      toast(r.ok ? 'Provisão lançada. Toque em cada fixa para ajustar o valor do mês.' : r.msg);
-      if (S.mesVista === comp) renderMes(r.resumo);
-      if (comp === S.mesAtual) { renderHeader(r.resumo); renderUltimos(r.resumo); }
-      else if (comp === addMes(S.mesAtual, 1)) renderUltimos(null, r.resumo);
-      S.painelSujo = true;
-    } catch (e) { toast(e.message, true); }
+  function formMeta() {
+    const r = S.inv.reserva;
+    abrirModal(`${hd('Meta da reserva')}
+      <label for="metaV">Meta (R$)</label><input id="metaV" class="valor moeda" inputmode="numeric" value="${r.meta ? num2(r.meta) : ''}" placeholder="0,00">
+      <div class="hint">Referência comum: de 3 a 6 meses do custo de vida de vocês dois.</div>
+      <button class="btn" id="metaS">Salvar meta</button>`);
+    $('metaS').onclick = async () => { try { renderInv(await run('setMetaReserva', parseValor($('metaV').value) || 0)); fecharModal(); toast('Meta salva.'); } catch (e) { toast(e.message, true); } };
   }
 
-  async function telaRecorrentes(lista) {
-    abrirModal(`${hd('Fixas e salário')}<div class="hint">Valores padrão usados a cada mês. Para mudar só um mês, toque no lançamento na aba Mês.</div><div id="recs"><div class="loading">Carregando…</div></div>`);
-    try { lista = lista || await run('getRecorrentes'); } catch (e) { return toast(e.message, true); }
-    S.recs = lista;
-    if (!$('recs')) return;
-    const linha = x => `<div class="item${x.ativo ? '' : ' prev'}"><div class="main" onclick="formRecorrente(${x.row})"><div class="t">${esc(x.desc)}</div>
-      <div class="s">${esc([x.tipo === 'Receita' ? 'entrada' : x.cat, x.meio, 'dia ' + x.dia, x.pct ? (S.init.esposa || 'Mariana') + ' ' + Math.round(x.pct * 100) + '%' : '', x.ativo ? '' : 'pausada'].filter(Boolean).join(' · '))}</div></div>
-      <div class="v${x.tipo === 'Receita' ? ' rec' : ''}">${x.tipo === 'Receita' ? '+' : ''}${fmt(x.valor)}</div></div>`;
-    const rec = lista.filter(x => x.tipo === 'Receita'), des = lista.filter(x => x.tipo !== 'Receita');
-    $('recs').innerHTML = `<div class="card"><h3>Entradas fixas</h3>${rec.map(linha).join('') || '<div class="s">Nenhuma.</div>'}
-        <div class="btnrow"><button onclick="formRecorrente(0,'Receita')">+ Nova entrada fixa</button></div></div>
-      <div class="card"><h3>Despesas fixas</h3>${des.map(linha).join('') || '<div class="s">Nenhuma.</div>'}
-        <div class="btnrow"><button onclick="formRecorrente(0,'Despesa')">+ Nova despesa fixa</button></div></div>`;
+  // ---------- Painel ----------
+  const kfmt = v => { const a = Math.abs(v); return (v < 0 ? '-' : '') + (a >= 1000 ? (a / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k' : Math.round(a)); };
+  const mesAbrev = ym => { const [y, m] = ym.split('-').map(Number); return MESES[m - 1].slice(0, 3) + (m === 1 ? '/' + String(y).slice(2) : ''); };
+  function colunas(dados, series) {
+    const W = 340, H = 170, pl = 30, pb = 22, pt = 12;
+    const vals = dados.flatMap(d => series.map(s => d[s.key]));
+    const max = Math.max(1, ...vals), min = Math.min(0, ...vals);
+    const y = v => pt + (max - v) / (max - min) * (H - pt - pb);
+    const slot = (W - pl) / dados.length, bw = Math.min(14, (slot - 4) / series.length);
+    let g = '';
+    [max, (max + min) / 2, min].forEach(t => g += `<line x1="${pl}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${pl - 4}" y="${y(t) + 3}" text-anchor="end">${kfmt(t)}</text>`);
+    dados.forEach((d, i) => {
+      const x0 = pl + i * slot + (slot - bw * series.length) / 2;
+      series.forEach((s, j) => {
+        const v = d[s.key], cor = typeof s.cor === 'function' ? s.cor(v) : s.cor;
+        const ya = y(Math.max(v, 0)), yb = y(Math.min(v, 0));
+        g += `<rect x="${x0 + j * bw}" y="${ya}" width="${Math.max(1, bw - 1.5)}" height="${Math.max(1, yb - ya)}" rx="2" fill="${cor}" opacity="${d.prev ? .5 : 1}"><title>${esc(s.nome || '')} ${fmt(v)}</title></rect>`;
+      });
+      if (dados.length <= 13 || i % 2 === 0) g += `<text x="${pl + i * slot + slot / 2}" y="${H - 6}" text-anchor="middle">${mesAbrev(d.comp)}</text>`;
+    });
+    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg></div>`;
+  }
+  function periodo() {
+    const t = S.per.tipo, fim = S.mesHoje;
+    if (t === 'ano') return { de: fim.slice(0, 4) + '-01-01', ate: fim.slice(0, 4) + '-12-01' };
+    if (t === 'livre') return { de: S.per.de, ate: S.per.ate };
+    return { de: addMes(fim, -(Number(t) - 1)), ate: fim };
+  }
+  async function abrirPainel() {
+    const p = periodo();
+    if (!p.de || !p.ate) return;
+    $('painel').innerHTML = '<div class="loading">Carregando…</div>';
+    try { renderPainel(await run('getPeriodo', p.de, p.ate)); } catch (e) { toast(e.message, true); $('painel').innerHTML = ''; }
+  }
+  function renderPainel(d) {
+    const t = d.totais, n = Math.max(1, d.meses.length);
+    const meses = d.meses.map(m => ({ comp: m.comp, entra: m.ent + m.mar, sai: m.des, sobra: m.sobra, prev: m.sit === 'Previsto' }));
+    const maxCat = Math.max(1, ...d.categorias.map(c => c.valor)), maxMeio = Math.max(1, ...d.meios.map(c => c.valor));
+    const totCat = d.categorias.reduce((s, c) => s + Math.max(0, c.valor), 0) || 1;
+    const bar = (nome, v, max, sub) => `<div class="bar"><div class="top"><span>${esc(nome)}</span><span>${fmt0(v)}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.max(1, Math.max(0, v) / max * 100)}%"></div></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+    $('painel').innerHTML = `
+      <div class="kpis" style="margin-bottom:12px">
+        <div class="kpi"><small>Entradas + repasse</small><b>${fmt0(t.ent + t.mar)}</b></div>
+        <div class="kpi"><small>Saídas</small><b>${fmt0(t.des)}</b></div>
+        <div class="kpi"><small>Sobra do salário</small><b class="${t.sobra < 0 ? 'neg' : 'pos'}">${fmt0(t.sobra)}</b></div>
+        <div class="kpi"><small>Média de saídas/mês</small><b>${fmt0(t.mediaDes)}</b></div>
+      </div>
+      ${meses.length ? `<div class="card"><h3>Entradas x saídas · ${mesCurto(d.de)} a ${mesCurto(d.ate)}</h3>
+        ${colunas(meses, [{ key: 'entra', cor: 'var(--c-ent)', nome: 'Entradas + repasse' }, { key: 'sai', cor: 'var(--c-des)', nome: 'Saídas' }])}
+        <div class="legend"><span><i style="background:var(--c-ent)"></i>Entradas + repasse</span><span><i style="background:var(--c-des)"></i>Saídas</span><span>barras claras: previsto</span></div></div>
+      <div class="card"><h3>Sobra do salário por mês</h3>
+        ${colunas(meses, [{ key: 'sobra', cor: v => v < 0 ? 'var(--c-des)' : 'var(--c-ent)', nome: 'Sobra' }])}
+        <div class="tw"><table class="mt"><thead><tr><th>Mês</th><th>Entradas</th><th>Saídas</th><th>Sobra</th></tr></thead><tbody>
+          ${d.meses.map(m => `<tr><td>${mesCurto(m.comp + '-01')}${m.sit === 'Previsto' ? '*' : ''}</td><td>${fmt0(m.ent + m.mar)}</td><td>${fmt0(m.des)}</td><td class="${m.sobra < 0 ? 'neg' : ''}">${fmt0(m.sobra)}</td></tr>`).join('')}
+        </tbody></table></div><div class="hint">* previsto (gastos fixos e parcelas já lançadas). Entradas incluem o repasse da ${esc(esp())}.</div></div>`
+        : '<div class="card"><div class="hint">Sem meses neste período.</div></div>'}
+      <div class="card"><h3>Despesas por categoria</h3>${donut(d.categorias)}</div>
+      <div class="card"><h3>Ranking de categorias</h3>
+        ${d.categorias.map(c => bar(c.nome, c.valor, maxCat, `${Math.round(Math.max(0, c.valor) / totCat * 100)}% do total · média ${fmt0(c.valor / n)}/mês`)).join('') || '<div class="hint">Sem gastos.</div>'}</div>
+      <div class="card"><h3>Por forma de pagamento</h3>${d.meios.map(c => bar(c.nome, c.valor, maxMeio)).join('') || '<div class="hint">Sem gastos.</div>'}</div>
+      <div class="card"><h3>Maiores gastos</h3>${d.maiores.map(x => `<div class="rowv"><span>${esc(x.desc)}${x.parc ? ' <span class="tag">' + esc(x.parc) + '</span>' : ''}<br><small style="color:var(--muted)">${mesCurto(x.comp + '-01')} · ${esc(x.cat)}</small></span><b>${fmt(x.valor)}</b></div>`).join('') || '<div class="hint">Nada no período.</div>'}</div>`;
   }
 
-  function formRecorrente(row, tipoNovo) {
-    const x = row ? S.recs.find(r => r.row === row) : { desc: '', tipo: tipoNovo, cat: tipoNovo === 'Receita' ? 'Salário' : 'Moradia', meio: 'Pix/Débito', valor: 0, dia: 1, pct: 0, inicio: S.mesAtual, fim: '', ativo: true };
-    const cats = x.tipo === 'Receita' ? S.init.categoriasReceita : S.init.categoriasDespesa;
-    abrirModal(`${hd(row ? x.desc : (x.tipo === 'Receita' ? 'Nova entrada fixa' : 'Nova despesa fixa'))}
-      <label>Descrição</label><input id="rDesc" value="${esc(x.desc)}">
-      <label>Valor padrão (R$)</label><input id="rValor" class="valor moeda" inputmode="numeric" value="${num2(x.valor)}">
-      <div class="two">
-        <div><label>Categoria</label><select id="rCat">${cats.map(c => `<option${c === x.cat ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
-        <div><label>Pagamento</label><select id="rMeio">${S.init.meios.map(m => `<option${m === x.meio ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div>
+  // ---------- Configurações ----------
+  async function telaConfig() {
+    abrirModal(`${hd('Configurações')}<div id="cfgBody"><div class="loading">Carregando…</div></div>`);
+    let c; try { c = await run('getConfig'); } catch (e) { return toast(e.message, true); }
+    renderConfig(c);
+  }
+  async function recarregarInit() {
+    const i = await run('getInitData'); S.init = i;
+    const meioAtual = $('fMeio').value;
+    preencherSelect($('fMeio'), i.meios, i.meios.includes(meioAtual) ? meioAtual : i.meios[0]);
+    document.querySelectorAll('.nmEsp').forEach(e => e.textContent = esp());
+    atualizarHint();
+  }
+  function renderConfig(c) {
+    if (!$('cfgBody')) return;
+    $('cfgBody').innerHTML = `
+      <div class="card"><h3>Cartões de crédito</h3>
+        ${c.cartoes.map((k, i) => `<div class="item"><div class="main" style="cursor:default"><div class="t">${esc(k.nome.replace('Cartão ', ''))}</div><div class="s">fecha no dia</div></div>
+          <input id="kDia${i}" type="number" inputmode="numeric" min="1" max="28" value="${k.fechamento}" style="width:70px;text-align:center" aria-label="Dia de fechamento do ${esc(k.nome)}">
+          <button class="lnk" data-kdel="${esc(k.nome)}">Remover</button></div>`).join('') || '<div class="hint">Nenhum cartão.</div>'}
+        ${c.cartoes.length ? '<div class="btnrow"><button id="kSalvarDias">Salvar dias de fechamento</button></div>' : ''}
+        <div class="two" style="margin-top:6px"><div><label for="kNome">Novo cartão</label><input id="kNome" placeholder="Ex.: C6, Itaú"></div>
+          <div><label for="kDia">Fecha no dia</label><input id="kDia" type="number" inputmode="numeric" min="1" max="28" value="5"></div></div>
+        <div class="btnrow"><button class="pri" id="kAdd">Adicionar cartão</button></div>
+        <div class="hint">Compras a partir do dia de fechamento caem na fatura do mês seguinte. Remover um cartão não apaga os lançamentos dele.</div>
       </div>
-      <div class="two">
-        <div><label>Dia</label><input id="rDia" type="number" inputmode="numeric" min="1" max="28" value="${x.dia}"></div>
-        ${x.tipo === 'Receita' ? '<div></div>' : `<div><label>Parte da ${esc(S.init.esposa || 'Mariana')} (%)</label><input id="rPct" type="number" inputmode="numeric" min="0" max="100" value="${Math.round(x.pct * 100)}"></div>`}
+      <div class="card"><h3>Salário</h3>
+        <div class="two"><div><label for="gSal">Valor padrão (R$)</label><input id="gSal" class="moeda" inputmode="numeric" value="${num2(c.salario)}"></div>
+          <div><label for="gSalDia">Dia do pagamento</label><input id="gSalDia" type="number" inputmode="numeric" min="1" max="28" value="${c.salarioDia}"></div></div>
+        <div class="hint">Vale para a provisão dos próximos meses. Para mudar o salário de um mês só, toque nele no Histórico.</div>
       </div>
-      ${x.tipo === 'Receita' ? '' : `<div class="hint">Use o pagamento "Abatido do repasse" para contas que você paga descontando do repasse dela (luz, internet).</div>`}
-      <div class="two">
-        <div><label>Começa em</label><input id="rIni" type="month" value="${(x.inicio || S.mesAtual).slice(0, 7)}"></div>
-        <div><label>Termina em (opcional)</label><input id="rFim" type="month" value="${(x.fim || '').slice(0, 7)}"></div>
+      <div class="card"><h3>Divisão com a esposa</h3>
+        <div class="two"><div><label for="gEsp">Nome</label><input id="gEsp" value="${esc(c.esposa)}"></div>
+          <div><label for="gPct">Parte padrão dela (%)</label><input id="gPct" type="number" inputmode="numeric" min="0" max="100" value="${Math.round(c.pctMariana * 100)}"></div></div>
       </div>
-      <div class="toggle"><span>Ativa</span><label class="sw" style="margin:0"><input type="checkbox" id="rOn"${x.ativo ? ' checked' : ''}><i></i></label></div>
-      <button class="btn" id="rSalvar">Salvar</button>
-      <div class="btnrow"><button onclick="telaRecorrentes(S.recs)">Voltar</button>${row ? `<button class="dang" id="rDel">Excluir</button>` : ''}</div>`);
-    $('rSalvar').onclick = async () => {
-      const b = $('rSalvar'); b.disabled = true; b.textContent = 'Salvando…';
+      <div class="card"><h3>Conta e reserva</h3>
+        <div class="two"><div><label for="gSaldo">Saldo inicial em conta</label><input id="gSaldo" class="moeda" inputmode="numeric" value="${num2(c.saldoInicial)}"></div>
+          <div><label for="gMeta">Meta da reserva (R$)</label><input id="gMeta" class="moeda" inputmode="numeric" value="${num2(c.metaReserva)}"></div></div>
+        <div class="hint">Saldo inicial: quanto havia na conta no primeiro mês do fluxo de caixa (fev/2025).</div>
+      </div>
+      <button class="btn" id="gSalvar">Salvar configurações</button>
+      <div class="btnrow"><button onclick="telaConexao()">Conexão com a planilha</button></div>`;
+    $('kAdd').onclick = async () => {
+      if (!$('kNome').value.trim()) return toast('Informe o nome do cartão.', true);
+      try { renderConfig(await run('saveCartao', { nome: $('kNome').value, fechamento: $('kDia').value })); await recarregarInit(); toast('Cartão adicionado.'); } catch (e) { toast(e.message, true); }
+    };
+    if ($('kSalvarDias')) $('kSalvarDias').onclick = async () => {
       try {
-        const l = await run('saveRecorrente', { row: row || 0, desc: $('rDesc').value, tipo: x.tipo, cat: $('rCat').value, meio: $('rMeio').value,
-          valor: parseValor($('rValor').value) || 0, dia: $('rDia').value, pct: $('rPct') ? (Number($('rPct').value) || 0) / 100 : 0,
-          inicio: $('rIni').value ? $('rIni').value + '-01' : '', fim: $('rFim').value ? $('rFim').value + '-01' : '', ativo: $('rOn').checked });
-        toast('Salvo. Vale a partir dos próximos lançamentos de fixas.'); S.painelSujo = true; telaRecorrentes(l);
-      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
+        let r; for (let i = 0; i < c.cartoes.length; i++) if (String(c.cartoes[i].fechamento) !== $('kDia' + i).value) r = await run('saveCartao', { nome: c.cartoes[i].nome, fechamento: $('kDia' + i).value });
+        if (r) { renderConfig(r); await recarregarInit(); carregarMes(); } toast(r ? 'Dias de fechamento salvos. Vale para os próximos lançamentos.' : 'Nada mudou.');
+      } catch (e) { toast(e.message, true); }
     };
-    if ($('rDel')) $('rDel').onclick = async () => {
-      if (!confirm('Excluir esta fixa? Os lançamentos já feitos continuam; ela só deixa de ser gerada. Para pausar, prefira desligar "Ativa".')) return;
-      try { telaRecorrentes(await run('deleteRecorrente', row)); toast('Excluída.'); } catch (e) { toast(e.message, true); }
+    document.querySelectorAll('[data-kdel]').forEach(b => b.onclick = async () => {
+      if (!confirm(`Remover ${b.dataset.kdel} da lista? Os lançamentos dele continuam.`)) return;
+      try { renderConfig(await run('deleteCartao', b.dataset.kdel)); await recarregarInit(); toast('Cartão removido da lista.'); } catch (e) { toast(e.message, true); }
+    });
+    $('gSalvar').onclick = async () => {
+      const b = $('gSalvar'); b.disabled = true; b.textContent = 'Salvando…';
+      try {
+        renderConfig(await run('saveConfig', { salario: parseValor($('gSal').value) || 0, salarioDia: Number($('gSalDia').value) || 5, esposa: $('gEsp').value.trim(),
+          pctMariana: (Number($('gPct').value) || 0) / 100, saldoInicial: parseValor($('gSaldo').value) || 0, metaReserva: parseValor($('gMeta').value) || 0 }));
+        await recarregarInit(); carregarMes(); toast('Configurações salvas.');
+      } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar configurações'; }
     };
   }
 
-  async function recarregarAtual() {
-    try {
-      const [r, prox] = await Promise.all([run('getMonthSummary', S.mesAtual), run('getMonthSummary', addMes(S.mesAtual, 1))]);
-      renderHeader(r); renderUltimos(r, prox);
-    } catch (e) {}
+  // ---------- Navegação ----------
+  const SECAO = { lancar: 'tabLancar', hist: 'tabHist', inv: 'tabInv', painel: 'tabPainel' };
+  function trocarAba(aba) {
+    S.aba = aba;
+    Object.keys(SECAO).forEach(a => {
+      $(SECAO[a]).classList.toggle('hidden', a !== aba);
+      document.querySelector(`nav [data-tab="${a}"]`).classList.toggle('on', a === aba);
+    });
+    if (aba === 'hist') { if (S.resumo && S.resumo.comp === S.mes) renderHist(S.resumo); else carregarMes(); }
+    if (aba === 'inv') abrirInv();
+    if (aba === 'painel') abrirPainel();
+    window.scrollTo(0, 0);
   }
-
-  $('btnSalvar').onclick = salvar;
-  $('nLancar').onclick = () => trocarAba('lancar');
-  $('nMes').onclick = () => trocarAba('mes');
-  $('nPainel').onclick = () => trocarAba('painel');
-  $('nInv').onclick = () => trocarAba('inv');
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.closest('#segTipo')) return setTipo(b.dataset.v);
+    if (b.closest('#segPessoa')) { S.pessoa = b.dataset.p; return S.inv && renderInv(S.inv); }
+    if (b.dataset.tab) return trocarAba(b.dataset.tab);
+    if (b.dataset.ir) {
+      if (b.dataset.ir === 'inv') { S.pessoa = 'eu'; return trocarAba('inv'); }
+      trocarAba('hist');
+      setTimeout(() => { const el = $(b.dataset.ir); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+      return;
+    }
+    if (b.dataset.per) {
+      S.per.tipo = b.dataset.per;
+      document.querySelectorAll('#chipsPer button').forEach(x => x.classList.toggle('on', x === b));
+      $('boxLivre').classList.toggle('hidden', S.per.tipo !== 'livre');
+      if (S.per.tipo !== 'livre') abrirPainel();
+      return;
+    }
+    if (b.dataset.pago) {
+      try { const v = await run('togglePago', b.dataset.pago); b.classList.toggle('on', v === true);
+        const x = itensConhecidos().find(i => i.id === b.dataset.pago); if (x) x.pago = v === true; } catch (er) { toast(er.message, true); }
+      return;
+    }
+    if (b.dataset.fat) {
+      try { const r = await run('pagarFatura', b.dataset.fat, S.mes); S.resumo = r; renderTopo(r); renderHist(r); toast('Fatura marcada como paga.'); } catch (er) { toast(er.message, true); }
+    }
+  });
   $('ovl').addEventListener('click', e => { if (e.target.id === 'ovl') fecharModal(); });
-  $('mPrev').onclick = () => abrirMes(addMes(S.mesVista, -1));
-  $('mNext').onclick = () => abrirMes(addMes(S.mesVista, 1));
-  ['fValor', 'fParc', 'fMeio', 'fData', 'fModo', 'fPct', 'fDiv'].forEach(id => $(id).addEventListener('input', atualizarHint));
+  $('btnSalvar').onclick = salvar;
+  $('btnCfg').onclick = () => lerCfg() ? telaConfig() : telaConexao();
+  $('mPrev').onclick = () => S.mes && mudarMes(-1);
+  $('mNext').onclick = () => S.mes && mudarMes(1);
+  $('hMes').onclick = () => S.mes && mudarMes(0);
+  $('pAplicar').onclick = () => {
+    if (!$('pDe').value || !$('pAte').value) return toast('Escolha o mês inicial e o final.', true);
+    if ($('pDe').value > $('pAte').value) return toast('O mês inicial precisa vir antes do final.', true);
+    S.per.de = $('pDe').value + '-01'; S.per.ate = $('pAte').value + '-01'; abrirPainel();
+  };
+  ['fValor', 'fParc', 'fMeio', 'fData', 'fModo', 'fPct'].forEach(id => $(id).addEventListener('input', atualizarHint));
   $('fDiv').addEventListener('change', atualizarHint);
   $('fDesc').addEventListener('change', aplicarSugestao);
-
-  $('btnCfg').onclick = () => telaConfig();
-  $('btnMesHdr').onclick = () => {
-    S.mesAtual = S.mesAtual === S.mesFoco ? S.mesHoje : S.mesFoco;
-    S.mesVista = null; S.painelSujo = true;
-    recarregarAtual();
-    if (!$('tabMes').classList.contains('hidden')) abrirMes(S.mesAtual);
-    if (!$('tabPainel').classList.contains('hidden')) abrirPainel();
-  };
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
   (async function iniciar() {
-    if (!lerCfg()) { $('hMes').textContent = 'Bem-vindo'; telaConfig(); return; }
+    if (!lerCfg()) { $('hMesT').textContent = 'Bem-vindo'; telaConexao(); return; }
     try {
       const i = await run('getInitData');
       S.init = i;
-      // Mês em foco: o da próxima fatura do cartão principal (depois do fechamento, já é o mês seguinte)
+      document.querySelectorAll('.nmEsp').forEach(e => e.textContent = esp());
+      // Mês em foco: o da próxima fatura (depois do fechamento do cartão, já é o mês seguinte)
       S.mesHoje = i.hoje.slice(0, 8) + '01';
-      const fech = i.config.fechamento['Cartão Inter'] || 5;
+      const cart = i.meios.find(m => i.config.fechamento[m]);
+      const fech = cart ? i.config.fechamento[cart] : 5;
       S.mesFoco = Number(i.hoje.slice(8, 10)) >= fech ? addMes(S.mesHoje, 1) : S.mesHoje;
-      S.mesAtual = S.mesFoco;
+      S.mes = S.mesFoco;
       $('fData').value = i.hoje;
       $('fPct').value = Math.round(i.config.pctMariana * 100);
+      $('pDe').value = addMes(S.mesHoje, -5).slice(0, 7); $('pAte').value = S.mesHoje.slice(0, 7);
       preencherSelect($('fCat'), i.categoriasDespesa, 'Mercado');
-      preencherSelect($('fMeio'), i.meios, 'Cartão Inter');
-      atualizarDatalist();
-      setTipo('Despesa');
-      recarregarAtual();
-    } catch (e) {
-      toast('Erro ao carregar: ' + e.message, true);
-    }
+      preencherSelect($('fMeio'), i.meios, cart || i.meios[0]);
+      atualizarDatalist(); setTipo('Despesa');
+      carregarMes();
+    } catch (e) { toast('Erro ao carregar: ' + e.message, true); }
   })();
 </script>
 </body>
