@@ -110,7 +110,7 @@
   .tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: var(--chip); color: var(--brand); border-radius: 6px; padding: 2px 6px; margin-right: 4px; }
   .split { display: flex; gap: 8px; margin-top: 8px; }
   .split > div { flex: 1; background: var(--chip); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
-  .split b { display: block; font-size: 15px; color: var(--ink); }
+  .split b { display: block; font-size: 15px; color: var(--ink); white-space: nowrap; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .chips button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 20px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
   .chips button.on { background: var(--brand); color: #fff; border-color: transparent; }
@@ -296,7 +296,7 @@
 
 <script>
   const S = { tipo: 'Despesa', init: null, mes: null, mesFoco: null, mesHoje: null, resumo: null, aba: 'lancar',
-              inv: null, pessoa: 'eu', per: { tipo: '6' }, recs: null, movs: null, ativoAtual: null };
+              inv: null, pessoa: 'eu', per: { tipo: '6' }, recs: null, movs: null, ativoAtual: null, movsTodas: null, filtroMov: 'todas', movTudo: false };
   const $ = id => document.getElementById(id);
   const fmt = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmt0 = v => (v < 0 ? '-' : '') + 'R$ ' + Math.abs(Math.round(v || 0)).toLocaleString('pt-BR');
@@ -679,7 +679,35 @@
   // ---------- Investimentos ----------
   const TIPOS = ['Reserva', 'Renda fixa', 'Ação', 'FII', 'Outro'];
   const TIPOS_TIT = { 'Reserva': 'Reserva de emergência', 'Renda fixa': 'Renda fixa', 'Ação': 'Ações', 'FII': 'Fundos imobiliários', 'Outro': 'Outros' };
-  async function abrirInv() { try { renderInv(await run('getInvestimentos')); } catch (e) { toast(e.message, true); } }
+  async function abrirInv() {
+    try { const [d, m] = await Promise.all([run('getInvestimentos'), run('getMovimentacoes', '')]); S.movsTodas = m; renderInv(d); }
+    catch (e) { toast(e.message, true); }
+  }
+  // Recarrega o histórico depois de salvar ou excluir uma movimentação
+  function atualizarHistInv() { run('getMovimentacoes', '').then(m => { S.movsTodas = m; if (S.inv && S.aba === 'inv') renderInv(S.inv); }).catch(() => {}); }
+  const OP_GRUPO = { 'Aplicação': 'entradas', 'Compra': 'entradas', 'Resgate': 'resgates', 'Venda': 'resgates', 'Provento': 'proventos', 'Atualização de saldo': 'saldo' };
+  function histMovHtml(d, p) {
+    if (!S.movsTodas) return '';
+    const dono = a => a.titular === 'Conjunta' ? 'conj' : a.titular === d.esposa ? 'esposa' : 'eu';
+    const daPessoa = S.movsTodas.filter(m => {
+      const a = d.ativos.find(x => x.id === m.ativoId); if (!a) return false;
+      const o = dono(a); return o === 'conj' ? (m.quem === d.esposa ? 'esposa' : 'eu') === p : o === p;
+    });
+    if (!daPessoa.length) return '';
+    const f = S.filtroMov, l = daPessoa.filter(m => f === 'todas' || OP_GRUPO[m.op] === f);
+    const soma = g => daPessoa.filter(m => OP_GRUPO[m.op] === g).reduce((s, m) => s + m.valor, 0);
+    const vis = S.movTudo ? l : l.slice(0, 15);
+    const fm = window.innerWidth < 600 ? fmt0 : fmt;
+    const chip = (k, t) => `<button data-fmov="${k}" class="${f === k ? 'on' : ''}">${t}</button>`;
+    return `<div class="card" id="inv-hist"><h3>Histórico de movimentações</h3>
+      <div class="split" style="margin:4px 0 10px"><div>Aplicado<b>${fm(soma('entradas'))}</b></div><div>Resgatado<b>${fm(soma('resgates'))}</b></div><div>Proventos<b>${fm(soma('proventos'))}</b></div></div>
+      <div class="chips">${chip('todas', 'Todas')}${chip('entradas', 'Aplicações')}${chip('resgates', 'Resgates')}${chip('proventos', 'Proventos')}</div>
+      ${vis.map(m => { const sai = OP_GRUPO[m.op] === 'resgates', sal = m.op === 'Atualização de saldo';
+        return `<div class="item"><div class="main" onclick="S.movs=S.movsTodas;formMov('${m.ativoId}','${m.op}','${m.id}')"><div class="t">${esc(m.ativo)}</div>
+          <div class="s"><span class="tag">${esc(m.op)}</span>${dataBr(m.data)}${m.qtd ? ' · ' + m.qtd + ' un.' : ''}${m.obs ? ' · ' + esc(m.obs) : ''}</div></div>
+          <div class="v${sai || sal ? '' : ' rec'}">${sai ? '-' : sal ? '=' : '+'}${fmt(m.valor)}</div></div>`; }).join('') || '<div class="hint">Nada neste filtro.</div>'}
+      ${l.length > vis.length ? `<div class="btnrow"><button data-movtudo="1">Mostrar todas (${l.length})</button></div>` : ''}</div>`;
+  }
   // Parte de uma pessoa ('eu' ou 'esposa') em um ativo; null se não for dela
   function parte(a, p) {
     const dono = a.titular === 'Conjunta' ? 'conj' : a.titular === S.inv.esposa ? 'esposa' : 'eu';
@@ -730,6 +758,7 @@
           ${r.meta ? `<div class="prog"><i style="width:${Math.min(100, r.pct * 100)}%"></i></div><div class="grp-sub">${Math.round(r.pct * 100)}% de ${fmt(r.meta)} · faltam ${fmt(Math.max(0, r.meta - r.valor))}</div>` : '<div class="grp-sub">Sem meta definida.</div>'}
           <div class="btnrow"><button class="pri" onclick="formMov('${res.id}','Aplicação')">Aportar</button><button onclick="formMov('${res.id}','Resgate')">Resgatar</button><button onclick="formMeta()">${r.meta ? 'Alterar meta' : 'Definir meta'}</button></div></div>` : ''}
       ${secoes || `<div class="card"><div class="hint">Nenhum investimento ${p === 'eu' ? 'seu' : 'da ' + esc(d.esposa)} ainda.</div></div>`}
+      ${histMovHtml(d, p)}
       <div class="btnrow" style="margin-bottom:12px"><button class="pri" id="btnNovoAtivo">+ Novo investimento</button></div>
       ${d.ativos.some(a => !a.ativo) ? `<div class="card"><h3>Encerrados</h3>${d.ativos.filter(a => !a.ativo).map(a => `<div class="item prev"><div class="main" onclick="abrirAtivo('${a.id}')"><div class="t">${esc(a.nome)}</div><div class="s">${esc(a.tipo)}</div></div></div>`).join('')}</div>` : ''}`;
     $('btnNovoAtivo').onclick = () => formAtivo(null, { titular: p === 'eu' ? 'Eu' : d.esposa });
@@ -796,7 +825,7 @@
     if ($('aDel')) $('aDel').onclick = () => {
       abrirModal(`${hd('Excluir investimento')}<div class="hint">Isso apaga "${esc(a.nome)}" e todas as movimentações dele. Se só encerrou o investimento, prefira desligar "Em carteira".</div>
         <div class="btnrow"><button class="dang" id="xSim">Excluir</button><button onclick="abrirAtivo('${id}')">Cancelar</button></div>`);
-      $('xSim').onclick = async () => { try { renderInv(await run('deleteAsset', id)); fecharModal(); toast('Investimento excluído.'); carregarMes(); } catch (e) { toast(e.message, true); } };
+      $('xSim').onclick = async () => { try { renderInv(await run('deleteAsset', id)); fecharModal(); toast('Investimento excluído.'); carregarMes(); atualizarHistInv(); } catch (e) { toast(e.message, true); } };
     };
     $('aSalvar').onclick = async () => {
       const bolsa = ehBolsa($('aTipo').value), nome = ($('aNome').value || $('aCod').value).trim();
@@ -818,7 +847,7 @@
             : { ativoId: novo.id, op: 'Aplicação', data: $('cData').value, valor: pr, quem });
           d = rr.inv; movs = rr.movs;
         }
-        renderInv(d); toast('Investimento salvo.'); carregarMes();
+        renderInv(d); toast('Investimento salvo.'); carregarMes(); atualizarHistInv();
         if (novo) abrirAtivo(novo.id, movs); else fecharModal();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
@@ -892,11 +921,11 @@
       try {
         const r = await run('saveMov', { id: movId || '', ativoId, op: $('mOp').value, data: $('mData').value, valor,
           qtd: Number($('mQtd').value) || 0, quem: q ? q.dataset.q : (a.titular === es ? es : 'Eu'), obs: $('mObs').value });
-        renderInv(r.inv); toast('Movimentação salva.'); abrirAtivo(ativoId, r.movs); carregarMes();
+        renderInv(r.inv); toast('Movimentação salva.'); abrirAtivo(ativoId, r.movs); carregarMes(); atualizarHistInv();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
     if ($('mDel')) $('mDel').onclick = async () => {
-      try { const r = await run('deleteMov', movId, ativoId); renderInv(r.inv); toast('Movimentação excluída.'); abrirAtivo(ativoId, r.movs); carregarMes(); }
+      try { const r = await run('deleteMov', movId, ativoId); renderInv(r.inv); toast('Movimentação excluída.'); abrirAtivo(ativoId, r.movs); carregarMes(); atualizarHistInv(); }
       catch (e) { toast(e.message, true); }
     };
   }
@@ -1055,7 +1084,9 @@
   document.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.closest('#segTipo')) return setTipo(b.dataset.v);
-    if (b.closest('#segPessoa')) { S.pessoa = b.dataset.p; return S.inv && renderInv(S.inv); }
+    if (b.closest('#segPessoa')) { S.pessoa = b.dataset.p; S.movTudo = false; return S.inv && renderInv(S.inv); }
+    if (b.dataset.fmov) { S.filtroMov = b.dataset.fmov; S.movTudo = false; return S.inv && renderInv(S.inv); }
+    if (b.dataset.movtudo) { S.movTudo = true; return S.inv && renderInv(S.inv); }
     if (b.dataset.tab) return trocarAba(b.dataset.tab);
     if (b.dataset.ir) {
       if (b.dataset.ir === 'inv') { S.pessoa = 'eu'; return trocarAba('inv'); }
