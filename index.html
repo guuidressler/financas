@@ -586,12 +586,24 @@
   function editarItem(id) {
     const x = itensConhecidos().find(i => i.id === id); if (!x) return;
     const valor = x.cat === 'Acerto Mariana' ? x.mariana : Math.abs(x.valor);
+    const ehAc = x.cat === 'Acerto Mariana', ehDesc = x.cat === 'Descontos do cartão' || x.valor < 0;
+    const cats = x.tipo === 'Receita' ? S.init.categoriasReceita : S.init.categoriasDespesa;
+    const meios = S.init.meios.includes(x.meio) ? S.init.meios : [x.meio].concat(S.init.meios);
+    const pctAtual = x.valor > 0 && x.mariana ? Math.round(x.mariana / x.valor * 100) : 0;
     abrirModal(`${hd(String(x.desc).replace(/^Acerto Mariana: /, ''))}
       <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'gasto fixo' : ''].filter(Boolean).join(' · '))}</div>
       <label for="eValor">Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
       ${x.fixo ? `<div class="toggle"><span>Usar este valor nos próximos meses</span><label class="sw"><input type="checkbox" id="ePadrao"><i></i></label></div>
         <div class="hint">Desligado: muda só este mês (ex.: provisão do aluguel ajustada no fim do mês). Ligado: vira o novo valor padrão.</div>` : ''}
       <label for="eDesc">Descrição</label><input id="eDesc" value="${esc(x.desc)}">
+      ${ehAc || ehDesc ? '' : `<div class="two">
+        <div><label for="eCat">Categoria</label><select id="eCat">${cats.map(c => `<option${c === x.cat ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+        <div><label for="eMeio">Pagamento</label><select id="eMeio">${meios.map(m => `<option${m === x.meio ? ' selected' : ''}>${esc(m)}</option>`).join('')}</select></div></div>`}
+      <div class="two">
+        <div><label for="eData">Data</label><input id="eData" type="date" value="${x.data || ''}"${x.parc ? ' disabled' : ''}></div>
+        ${x.tipo === 'Despesa' && !ehAc && !ehDesc ? `<div><label for="ePct">Parte da ${esc(esp())} (%)</label><input id="ePct" type="number" inputmode="numeric" min="0" max="100" value="${pctAtual}"></div>` : '<div></div>'}
+      </div>
+      <div class="hint" id="eHint">${x.parc ? 'Parcela de compra parcelada: a data e o mês da fatura não mudam por aqui.' : ''}</div>
       <div class="toggle"><span>Pago</span><label class="sw"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
       <button class="btn" id="eSalvar">Salvar</button>
       <div class="btnrow"><button class="dang" id="eDel">Excluir lançamento</button></div>`);
@@ -600,11 +612,26 @@
       if (!(v >= 0)) return toast('Valor inválido.', true);
       const b = $('eSalvar'); b.disabled = true; b.textContent = 'Salvando…';
       try {
-        const r = await run('updateTransaction', id, { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked, atualizarPadrao: !!($('ePadrao') && $('ePadrao').checked) });
+        const upd = { valor: v, descricao: $('eDesc').value, pago: $('ePago').checked, atualizarPadrao: !!($('ePadrao') && $('ePadrao').checked) };
+        if ($('eCat') && $('eCat').value !== x.cat) upd.categoria = $('eCat').value;
+        if ($('eMeio') && $('eMeio').value !== x.meio) upd.meio = $('eMeio').value;
+        if (!x.parc && $('eData').value && $('eData').value !== x.data) upd.data = $('eData').value;
+        if ($('ePct') && Number($('ePct').value) !== pctAtual) upd.pctMariana = (Number($('ePct').value) || 0) / 100;
+        const r = await run('updateTransaction', id, upd);
+        if (upd.meio || upd.data) carregarMes();
         fecharModal(); toast('Lançamento atualizado.');
         if (r && r.comp === S.mes) { S.resumo = r; renderTopo(r); renderHist(r); } else carregarMes();
       } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Salvar'; }
     };
+    const avisoMes = () => {
+      if (x.parc || ehAc || x.tipo !== 'Despesa' || !$('eMeio')) return;
+      const d = $('eData').value || x.data; if (!d) return;
+      const c = compDe(d, $('eMeio').value);
+      $('eHint').textContent = c.comp !== r0 ? `Vai para ${c.cartao ? 'a fatura de ' : ''}${mesCurto(c.comp)}.` : '';
+    };
+    const r0 = S.mes;
+    if ($('eMeio')) $('eMeio').onchange = avisoMes;
+    $('eData').onchange = avisoMes;
     $('eDel').onclick = () => confirmarExclusao(x);
   }
   function confirmarExclusao(x) {
