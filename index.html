@@ -253,6 +253,9 @@
         <div class="toggle"><span>Dividir com a <span class="nmEsp">Mariana</span></span><label class="sw"><input type="checkbox" id="fDiv"><i></i></label></div>
         <div id="boxPct" class="hidden"><label for="fPct">Parte dela (%)</label><input id="fPct" type="number" inputmode="numeric" min="1" max="100" value="50"></div>
       </div>
+      <div id="boxRep">
+        <div class="toggle"><span>Repetir todo mês</span><label class="sw"><input type="checkbox" id="fRep"><i></i></label></div>
+      </div>
       <div class="hint" id="hint"></div>
       <button class="btn" id="btnSalvar">Salvar lançamento</button>
     </div>
@@ -446,6 +449,9 @@
     const n = Math.max(1, parseInt($('fParc').value, 10) || 1);
     $('boxModo').classList.toggle('hidden', !(S.tipo === 'Despesa' && n > 1));
     $('boxPct').classList.toggle('hidden', !$('fDiv').checked);
+    const podeRep = (S.tipo === 'Despesa' || S.tipo === 'Receita') && n === 1;
+    $('boxRep').classList.toggle('hidden', !podeRep);
+    if (!podeRep) $('fRep').checked = false;
     const v = parseValor($('fValor').value) || 0, meio = $('fMeio').value, data = $('fData').value;
     let h = '';
     if ((S.tipo === 'Despesa' || S.tipo === 'Desconto') && data) {
@@ -458,6 +464,7 @@
         if ($('fDiv').checked && v) h += ` · ${esp()}: ${fmt(vp * ((Number($('fPct').value) || 50) / 100))}${n > 1 ? '/mês' : ''}`;
       }
     } else if (S.tipo === 'Acerto') h = `Valor que a ${esp()} vai te repassar, sem despesa sua.`;
+    if ($('fRep').checked) h += (h ? ' · ' : '') + 'Repete todo mês: aparece como previsão nos próximos meses até você parar.';
     $('hint').textContent = h;
   }
   async function salvar() {
@@ -467,11 +474,12 @@
     const btn = $('btnSalvar'); btn.disabled = true; btn.textContent = 'Salvando…';
     try {
       const r = await run('addTransaction', { tipo: S.tipo, data: $('fData').value, descricao: desc, categoria: $('fCat').value, meio: $('fMeio').value,
-        valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked, pctMariana: (Number($('fPct').value) || 50) / 100, pago: true });
+        valor, modoValor: $('fModo').value, parcelas: $('fParc').value, dividir: $('fDiv').checked, pctMariana: (Number($('fPct').value) || 50) / 100, pago: true, repetir: $('fRep').checked });
       const msg = r.ids.length > 1 ? `${r.ids.length} parcelas salvas (${mesCurto(r.competencias[0])} a ${mesCurto(r.competencias.at(-1))}).` : `Salvo em ${mesCurto(r.competencias[0])}.`;
       toast(msg); $('ultimo').textContent = `Último: ${desc || 'Desconto'} · ${fmt(valor)} · ${msg}`;
       if (desc) { S.init.sugestoes[desc] = { cat: $('fCat').value, meio: $('fMeio').value, mariana: $('fDiv').checked }; atualizarDatalist(); }
-      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false; atualizarHint();
+      if ($('fRep').checked) toast(msg + ' Vai repetir todo mês.');
+      $('fValor').value = ''; $('fDesc').value = ''; $('fParc').value = 1; $('fDiv').checked = false; $('fRep').checked = false; atualizarHint();
       if (r.resumo && r.resumo.comp === S.mes) { S.resumo = r.resumo; renderTopo(r.resumo); }
       $('fValor').focus();
     } catch (e) { toast(e.message || 'Não foi possível salvar.', true); }
@@ -491,7 +499,7 @@
 
   // ---------- Histórico ----------
   function itemHtml(x, semMeio) {
-    const sub = [x.data ? dataBr(x.data).slice(0, 5) : '', x.cat, semMeio ? '' : x.meio, x.parc].filter(Boolean).join(' · ');
+    const sub = [x.data ? dataBr(x.data).slice(0, 5) : '', x.cat, semMeio ? '' : x.meio, x.parc, x.fixo ? '↻ todo mês' : ''].filter(Boolean).join(' · ');
     const mar = x.mariana && x.cat !== 'Acerto Mariana' ? `<small>${esc(esp())} ${fmt(x.mariana)}</small>` : '';
     const val = x.tipo === 'Receita' ? `<div class="v rec">+${fmt(x.valor)}</div>`
       : x.cat === 'Acerto Mariana' ? `<div class="v rec">+${fmt(x.mariana)}<small>a receber</small></div>`
@@ -590,6 +598,7 @@
     const cats = x.tipo === 'Receita' ? S.init.categoriasReceita : S.init.categoriasDespesa;
     const meios = S.init.meios.includes(x.meio) ? S.init.meios : [x.meio].concat(S.init.meios);
     const pctAtual = x.valor > 0 && x.mariana ? Math.round(x.mariana / x.valor * 100) : 0;
+    const podeRep = !x.fixo && !x.parc && !ehAc && !ehDesc && (x.tipo === 'Despesa' || x.tipo === 'Receita');
     abrirModal(`${hd(String(x.desc).replace(/^Acerto Mariana: /, ''))}
       <div class="hint">${esc([x.cat, x.meio, x.parc ? 'parcela ' + x.parc : '', x.fixo ? 'gasto fixo' : ''].filter(Boolean).join(' · '))}</div>
       <label for="eValor">Valor (R$)</label><input id="eValor" class="valor moeda" inputmode="numeric" value="${num2(valor)}">
@@ -606,7 +615,11 @@
       <div class="hint" id="eHint">${x.parc ? 'Parcela de compra parcelada: a data e o mês da fatura não mudam por aqui.' : ''}</div>
       <div class="toggle"><span>Pago</span><label class="sw"><input type="checkbox" id="ePago"${x.pago ? ' checked' : ''}><i></i></label></div>
       <button class="btn" id="eSalvar">Salvar</button>
-      <div class="btnrow"><button class="dang" id="eDel">Excluir lançamento</button></div>`);
+      ${x.fixo ? `<div class="card" style="margin-top:14px"><h3>Repete todo mês</h3>
+          <div class="hint" style="margin-top:0">Para parar, escolha a partir de quando. Os meses anteriores continuam como estão.</div>
+          <div class="btnrow"><button class="dang" id="eParar">Tirar deste mês e dos próximos</button><button id="eParar2">Manter este mês, tirar dos próximos</button></div></div>`
+        : podeRep ? `<div class="btnrow"><button id="eRep">↻ Repetir todo mês</button></div>` : ''}
+      <div class="btnrow"><button class="dang" id="eDel">${x.fixo ? 'Excluir só deste mês' : 'Excluir lançamento'}</button></div>`);
     $('eSalvar').onclick = async () => {
       const v = parseValor($('eValor').value);
       if (!(v >= 0)) return toast('Valor inválido.', true);
@@ -633,6 +646,17 @@
     if ($('eMeio')) $('eMeio').onchange = avisoMes;
     $('eData').onchange = avisoMes;
     $('eDel').onclick = () => confirmarExclusao(x);
+    const parar = async modo => {
+      try { const r = await run('pararRecorrente', id, modo); fecharModal();
+        toast(modo === 'depois' ? 'Mantido neste mês. Não repete mais nos próximos.' : `Removido deste mês e dos próximos (${r.removidos} lançamento(s)).`);
+        carregarMes(); } catch (e) { toast(e.message, true); }
+    };
+    if ($('eParar')) $('eParar').onclick = () => parar('daqui');
+    if ($('eParar2')) $('eParar2').onclick = () => parar('depois');
+    if ($('eRep')) $('eRep').onclick = async () => {
+      try { const r = await run('tornarRecorrente', id); fecharModal(); toast('Agora repete todo mês. Os próximos meses já mostram a previsão.');
+        if (r.comp === S.mes) { S.resumo = r; renderTopo(r); renderHist(r); } else carregarMes(); } catch (e) { toast(e.message, true); }
+    };
   }
   function confirmarExclusao(x) {
     abrirModal(`${hd('Excluir lançamento')}<div class="hint">${esc(x.desc)} · ${fmt(Math.abs(x.valor || x.mariana))}</div>
@@ -1150,6 +1174,7 @@
   };
   ['fValor', 'fParc', 'fMeio', 'fData', 'fModo', 'fPct'].forEach(id => $(id).addEventListener('input', atualizarHint));
   $('fDiv').addEventListener('change', atualizarHint);
+  $('fRep').addEventListener('change', atualizarHint);
   $('fDesc').addEventListener('change', aplicarSugestao);
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
