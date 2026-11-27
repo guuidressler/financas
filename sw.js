@@ -1,5 +1,5 @@
 // Guarda só a tela do app (nenhum dado financeiro) para abrir rápido.
-const VERSAO = 'financas-v10';
+const VERSAO = 'financas-v11';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {

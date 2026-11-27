@@ -38,7 +38,17 @@
   .sobra .lb { font-size: 12px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
   .sobra .vl { font-size: 30px; font-weight: 800; line-height: 1.15; }
   .sobra .vl.neg { color: #ffb3a6; }
-  .hgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .eqwrap { display: flex; flex-direction: column; }
+  .eqwrap .sobra { order: -1; }
+  .opeq { display: none; }
+  .hgrid { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 4px; margin-top: 10px; align-items: center; }
+  .op { font-size: 18px; font-weight: 700; opacity: .85; text-align: center; padding: 0 1px; }
+  @media (max-width: 959px) {
+    .hgrid { gap: 3px; }
+    .hgrid button { padding: 7px 6px; }
+    .hgrid b { font-size: 13px; }
+    .op { font-size: 15px; }
+  }
   .hgrid button { border: 0; text-align: left; background: var(--hdr-chip); color: #fff; border-radius: 10px; padding: 7px 9px; min-width: 0; }
   .hgrid small { display: block; font-size: 10.5px; opacity: .78; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hgrid b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -180,13 +190,18 @@
     .nav-brand { display: block; text-align: center; font-weight: 800; color: var(--brand); font-size: 13px; padding: 4px 0 12px; }
     header { padding: 18px 28px 16px; }
     .hd-wrap, main { max-width: 1240px; }
-    .hd-wrap { display: grid; grid-template-columns: 300px 1fr; column-gap: 24px; align-items: end; }
-    .hd-row { grid-column: 1 / -1; }
+    .hd-wrap { display: grid; grid-template-columns: 1fr auto minmax(280px, 380px); column-gap: 22px; align-items: center;
+      grid-template-areas: ". . nav" "eq op res" ". . note"; }
+    .hd-row { grid-area: nav; }
+    .eqwrap { display: contents; }
+    .hgrid { grid-area: eq; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; margin-top: 0; }
+    .op { font-size: 30px; font-weight: 300; }
+    .opeq { display: block; grid-area: op; font-size: 40px; }
+    .eqwrap .sobra { grid-area: res; margin-top: 6px; }
+    .hnote { grid-area: note; }
     .sobra .vl { font-size: 36px; }
-    .hgrid { grid-template-columns: repeat(3, minmax(0, 200px)); justify-content: end; margin-top: 0; }
     .hgrid button { padding: 10px 12px; }
     .hgrid b { font-size: 16px; }
-    .hnote { grid-column: 1 / -1; }
     main { padding: 20px 28px; }
     #tabLancar { max-width: 620px; margin: 0 auto; }
     #hist, #inv, #painel, #esp { columns: 2; column-gap: 16px; }
@@ -210,11 +225,16 @@
       </div>
       <button class="gear" id="btnCfg" aria-label="Configurações">⚙</button>
     </div>
-    <div class="sobra"><div class="lb">Sobra do salário</div><div class="vl" id="hSobra">R$ –</div></div>
-    <div class="hgrid">
-      <button data-ir="hist-entradas"><small>Entradas</small><b id="hEnt">–</b></button>
-      <button data-ir="hist-saidas"><small>Saídas</small><b id="hSai">–</b></button>
-      <button data-ir="hist-mariana"><small id="hMarLb">Mariana</small><b id="hMar">–</b></button>
+    <div class="eqwrap">
+      <div class="hgrid">
+        <button data-ir="hist-entradas"><small>Entradas</small><b id="hEnt">–</b></button>
+        <span class="op">+</span>
+        <button data-ir="hist-mariana"><small id="hMarLb">Mariana</small><b id="hMar">–</b></button>
+        <span class="op">−</span>
+        <button data-ir="hist-saidas"><small>Saídas</small><b id="hSai">–</b></button>
+      </div>
+      <span class="op opeq">=</span>
+      <div class="sobra"><div class="lb">Sobra do salário</div><div class="vl" id="hSobra">R$ –</div></div>
     </div>
     <div class="hnote" id="hNote"></div>
   </div>
@@ -1129,8 +1149,10 @@
     document.querySelector('.sobra .lb').textContent = 'Você transfere no mês';
     $('hSobra').textContent = fmt(d.transfere); $('hSobra').classList.remove('neg');
     const totInv = d.investimentos.reduce((s, a) => s + a.valor, 0);
-    document.querySelector('.hgrid').innerHTML = `<button data-ir="esp-mes"><small>Sua parte</small><b>${f(d.parte)}</b></button>
-      <button data-ir="esp-mes"><small>Abatido</small><b>${f(d.abatido)}</b></button><button data-ir="esp-inv"><small>Investido</small><b>${f(totInv)}</b></button>`;
+    const g = document.querySelector('.hgrid');
+    g.style.gridTemplateColumns = window.innerWidth >= 960 ? 'minmax(0,1fr) auto minmax(0,1fr)' : '1fr auto 1fr';
+    g.innerHTML = `<button data-ir="esp-mes"><small>Sua parte</small><b>${f(d.parte)}</b></button><span class="op">−</span>
+      <button data-ir="esp-mes"><small>Abatido</small><b>${f(d.abatido)}</b></button>`;
     $('hNote').textContent = 'Sua parte nas despesas divididas, menos as contas que ' + 'você pagou e foram abatidas.';
     const div = d.itens.filter(x => x.tipo === 'dividido'), ab = d.itens.filter(x => x.tipo === 'abatido'), av = d.itens.filter(x => x.tipo === 'avulso');
     const linha = x => `<div class="item"><div class="main" style="cursor:default"><div class="t">${esc(x.desc)}</div>
