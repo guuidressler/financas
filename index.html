@@ -183,7 +183,7 @@
     .hd-wrap { display: grid; grid-template-columns: 300px 1fr; column-gap: 24px; align-items: end; }
     .hd-row { grid-column: 1 / -1; }
     .sobra .vl { font-size: 36px; }
-    .hgrid { grid-template-columns: repeat(6, 1fr); margin-top: 0; }
+    .hgrid { grid-template-columns: repeat(3, minmax(0, 200px)); justify-content: end; margin-top: 0; }
     .hgrid button { padding: 10px 12px; }
     .hgrid b { font-size: 16px; }
     .hnote { grid-column: 1 / -1; }
@@ -215,9 +215,6 @@
       <button data-ir="hist-entradas"><small>Entradas</small><b id="hEnt">–</b></button>
       <button data-ir="hist-saidas"><small>Saídas</small><b id="hSai">–</b></button>
       <button data-ir="hist-mariana"><small id="hMarLb">Mariana</small><b id="hMar">–</b></button>
-      <button data-ir="hist-cartao"><small>Cartão</small><b id="hCar">–</b></button>
-      <button data-ir="hist-fixos"><small>Fixos</small><b id="hFix">–</b></button>
-      <button data-ir="inv"><small>Investido</small><b id="hInv">–</b></button>
     </div>
     <div class="hnote" id="hNote"></div>
   </div>
@@ -413,9 +410,6 @@
     $('hSai').textContent = f(r.despesas);
     $('hMarLb').textContent = esp();
     $('hMar').textContent = f(r.repasseLiquido);
-    $('hCar').textContent = f(r.cartao);
-    $('hFix').textContent = f(r.fixos);
-    $('hInv').textContent = f(r.patrimonio && typeof r.patrimonio === 'object' ? r.patrimonio.minhaParte : r.patrimonio);
     $('hNote').textContent = 'Entradas + repasse − saídas' + (r.sobraVale ? ` (sem os ${fmt(r.sobraVale)} que sobram no vale)` : '') + '. Investimentos não entram nesta conta.';
   }
   function mudarMes(k) {
