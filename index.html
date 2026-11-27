@@ -189,8 +189,8 @@
     .hnote { grid-column: 1 / -1; }
     main { padding: 20px 28px; }
     #tabLancar { max-width: 620px; margin: 0 auto; }
-    #hist, #inv, #painel { columns: 2; column-gap: 16px; }
-    #hist > *, #inv > *, #painel > * { break-inside: avoid; }
+    #hist, #inv, #painel, #esp { columns: 2; column-gap: 16px; }
+    #hist > *, #inv > *, #painel > *, #esp > * { break-inside: avoid; }
     #segPessoa { max-width: 420px; }
     .ovl { align-items: center; }
     .sheet { border-radius: 18px; max-height: 88vh; }
@@ -270,6 +270,8 @@
     </div>
     <div id="inv"><div class="loading">Carregando…</div></div>
   </section>
+
+  <section id="tabEsposa" class="hidden"><div id="esp"><div class="loading">Carregando…</div></div></section>
 
   <section id="tabPainel" class="hidden">
     <div class="card">
@@ -366,6 +368,7 @@
     let d;
     try { d = await resp.json(); } catch (e) { throw new Error('Resposta inesperada. Confira a URL da ponte em ⚙ → Conexão.'); }
     if (!d.ok) { if (d.auth) telaConexao('Chave inválida. Gere uma nova na planilha (menu Painel) e cole aqui.'); throw new Error(d.erro || 'Erro desconhecido.'); }
+    if (d.perfil) S.perfil = d.perfil;
     return d.res;
   }
   function telaConexao(aviso) {
@@ -383,7 +386,7 @@
       if (chave.length < 32) return toast('Chave incompleta.', true);
       const ant = lerCfg(); salvarCfg({ url, chave });
       const b = $('cSalvar'); b.disabled = true; b.textContent = 'Testando…';
-      try { await run('getConfig'); fecharModal(); toast('Conectado.'); location.reload(); }
+      try { await run('quemSou'); fecharModal(); toast('Conectado.'); location.reload(); }
       catch (e) { if (ant) salvarCfg(ant); else try { localStorage.removeItem(CFG_KEY); } catch (er) {} b.disabled = false; b.textContent = 'Conectar'; toast(e.message, true); }
     };
     if ($('cSair')) $('cSair').onclick = () => { try { localStorage.removeItem(CFG_KEY); } catch (e) {} location.reload(); };
@@ -417,6 +420,7 @@
   }
   function mudarMes(k) {
     S.mes = k === 0 ? S.mesFoco : addMes(S.mes, k);
+    if (S.perfil === 'esposa') return carregarEsposa();
     $('hMesT').textContent = mesNome(S.mes); $('hMesSub').textContent = 'carregando…';
     if (S.aba === 'hist') $('hist').innerHTML = '<div class="loading">Carregando…</div>';
     carregarMes();
@@ -1119,6 +1123,60 @@
     };
   }
 
+  // ---------- Visão da esposa (chave só de leitura) ----------
+  async function carregarEsposa() {
+    $('hMesT').textContent = mesNome(S.mes); $('hMesSub').textContent = 'carregando…';
+    try { const d = await run('getVisaoEsposa', S.mes); if (d.comp === S.mes) renderEsposa(d); } catch (e) { toast(e.message, true); }
+  }
+  function renderEsposa(d) {
+    const f = window.innerWidth < 600 ? fmt0 : fmt;
+    $('hMesT').textContent = mesNome(d.comp);
+    $('hMesSub').textContent = d.comp === S.mesHoje ? 'mês atual' : d.situacao === 'Previsto' ? 'previsto' : 'toque para voltar';
+    document.querySelector('.sobra .lb').textContent = 'Você transfere no mês';
+    $('hSobra').textContent = fmt(d.transfere); $('hSobra').classList.remove('neg');
+    const totInv = d.investimentos.reduce((s, a) => s + a.valor, 0);
+    document.querySelector('.hgrid').innerHTML = `<button data-ir="esp-mes"><small>Sua parte</small><b>${f(d.parte)}</b></button>
+      <button data-ir="esp-mes"><small>Abatido</small><b>${f(d.abatido)}</b></button><button data-ir="esp-inv"><small>Investido</small><b>${f(totInv)}</b></button>`;
+    $('hNote').textContent = 'Sua parte nas despesas divididas, menos as contas que ' + 'você pagou e foram abatidas.';
+    const div = d.itens.filter(x => x.tipo === 'dividido'), ab = d.itens.filter(x => x.tipo === 'abatido'), av = d.itens.filter(x => x.tipo === 'avulso');
+    const linha = x => `<div class="item"><div class="main" style="cursor:default"><div class="t">${esc(x.desc)}</div>
+        <div class="s">${esc([x.data ? dataBr(x.data).slice(0, 5) : '', x.cat, x.meio, x.parc].filter(Boolean).join(' · '))}</div></div>
+        <div class="v">${fmt(x.parte)}${x.valor ? `<small>de ${fmt(x.valor)}</small>` : ''}</div></div>`;
+    const soma = (a, k) => a.reduce((s, x) => s + x[k], 0);
+    const meses = d.meses.map(m => ({ comp: m.comp, v: m.transfere }));
+    const movOp = { 'Aplicação': '+', 'Compra': '+', 'Resgate': '-', 'Venda': '-', 'Provento': '+', 'Atualização de saldo': '=' };
+    $('esp').innerHTML = `
+      <div class="card" id="esp-mes"><div class="grp-h"><h3>Resumo de ${MESES[Number(d.comp.slice(5, 7)) - 1]}</h3><b>${fmt(d.transfere)}</b></div>
+        <div class="rowv"><span>Sua parte nas despesas</span><b>${fmt(d.parte)}</b></div>
+        ${ab.map(x => `<div class="rowv"><span>− ${esc(x.desc)} (você pagou)</span><b>${fmt(x.valor)}</b></div>`).join('')}
+        <div class="rowv"><span><b>Você transfere</b></span><b>${fmt(d.transfere)}</b></div></div>
+      ${div.length ? `<div class="card"><div class="grp-h"><h3>Despesas divididas</h3><b>${fmt(soma(div, 'parte'))}</b></div>
+        <div class="grp-sub">Valor da sua parte e o total de cada compra.</div>${div.map(linha).join('')}</div>` : '<div class="card"><div class="hint">Nenhuma despesa dividida neste mês.</div></div>'}
+      ${av.length ? `<div class="card"><div class="grp-h"><h3>Valores avulsos</h3><b>${fmt(soma(av, 'parte'))}</b></div>${av.map(linha).join('')}</div>` : ''}
+      <div class="card"><h3>Últimos meses</h3>${colunas(meses, [{ key: 'v', cor: 'var(--c-acc)', nome: 'Você transferiu' }])}
+        <div class="tw"><table class="mt"><thead><tr><th>Mês</th><th>Parte</th><th>Abatido</th><th>Transfere</th></tr></thead><tbody>
+        ${d.meses.map(m => `<tr><td>${mesCurto(m.comp + '-01')}</td><td>${fmt0(m.parte)}</td><td>${fmt0(m.abatido)}</td><td>${fmt0(m.transfere)}</td></tr>`).join('')}</tbody></table></div></div>
+      <div class="card" id="esp-inv"><div class="grp-h"><h3>Seus investimentos</h3><b>${fmt(totInv)}</b></div>
+        <div class="grp-sub">aplicado ${fmt(soma(d.investimentos, 'aplicado'))} · se resgatar hoje ${fmt(soma(d.investimentos, 'liquido'))}</div>
+        ${d.investimentos.map(a => `<div class="item"><div class="main" style="cursor:default"><div class="t">${esc(a.nome)}</div>
+          <div class="s">${esc([a.tipo, a.indexador === 'CDI' ? num2(a.taxa) + '% do CDI' : '', a.inst, a.conj ? 'conjunto, sua parte' : ''].filter(Boolean).join(' · '))}</div></div>
+          <div class="v">${fmt(a.valor)}<small class="${a.valor - a.aplicado < 0 ? 'neg' : 'pos'}">${a.valor - a.aplicado >= 0 ? '+' : ''}${fmt(a.valor - a.aplicado)}</small></div></div>`).join('') || '<div class="hint">Nenhum investimento seu ainda.</div>'}
+        ${d.reserva.meta ? `<div style="margin-top:10px"><div class="grp-sub">Reserva de emergência do casal: ${fmt(d.reserva.valor)} de ${fmt(d.reserva.meta)}</div><div class="prog"><i style="width:${Math.min(100, d.reserva.pct * 100)}%"></i></div></div>` : ''}
+        ${d.movs.length ? `<h3 style="margin-top:14px">Suas movimentações</h3>` + d.movs.map(m => `<div class="item"><div class="main" style="cursor:default"><div class="t">${esc(m.ativo)}</div>
+          <div class="s"><span class="tag">${esc(m.op)}</span>${dataBr(m.data)}</div></div><div class="v${movOp[m.op] === '+' ? ' rec' : ''}">${movOp[m.op] || ''}${fmt(m.valor)}</div></div>`).join('') : ''}</div>
+      <div class="hint" style="text-align:center;margin-bottom:12px">Só leitura. Os lançamentos são feitos pelo app principal.</div>`;
+  }
+  async function iniciarEsposa(q) {
+    document.querySelector('nav').classList.add('hidden');
+    document.body.style.paddingBottom = '20px'; document.body.style.paddingLeft = '0';
+    ['tabLancar', 'tabHist', 'tabInv', 'tabPainel'].forEach(t => $(t).classList.add('hidden'));
+    $('tabEsposa').classList.remove('hidden');
+    S.aba = 'esposa'; S.perfil = 'esposa';
+    const hoje = new Date(), iso = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-01';
+    S.mesHoje = S.mesFoco = S.mes = iso;
+    carregarEsposa();
+  }
+
   // ---------- Navegação ----------
   const SECAO = { lancar: 'tabLancar', hist: 'tabHist', inv: 'tabInv', painel: 'tabPainel' };
   function trocarAba(aba) {
@@ -1139,6 +1197,7 @@
     if (b.dataset.fmov) { S.filtroMov = b.dataset.fmov; S.movTudo = false; return S.inv && renderInv(S.inv); }
     if (b.dataset.movtudo) { S.movTudo = true; return S.inv && renderInv(S.inv); }
     if (b.dataset.tab) return trocarAba(b.dataset.tab);
+    if (b.dataset.ir && S.perfil === 'esposa') { const el = $(b.dataset.ir); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     if (b.dataset.ir) {
       if (b.dataset.ir === 'inv') { S.pessoa = 'eu'; return trocarAba('inv'); }
       trocarAba('hist');
@@ -1163,7 +1222,7 @@
   });
   $('ovl').addEventListener('click', e => { if (e.target.id === 'ovl') fecharModal(); });
   $('btnSalvar').onclick = salvar;
-  $('btnCfg').onclick = () => lerCfg() ? telaConfig() : telaConexao();
+  $('btnCfg').onclick = () => !lerCfg() || S.perfil === 'esposa' ? telaConexao() : telaConfig();
   $('mPrev').onclick = () => S.mes && mudarMes(-1);
   $('mNext').onclick = () => S.mes && mudarMes(1);
   $('hMes').onclick = () => S.mes && mudarMes(0);
@@ -1181,6 +1240,8 @@
   (async function iniciar() {
     if (!lerCfg()) { $('hMesT').textContent = 'Bem-vindo'; telaConexao(); return; }
     try {
+      const q = await run('quemSou');
+      if (q && q.perfil === 'esposa') return iniciarEsposa(q);
       const i = await run('getInitData');
       S.init = i;
       document.querySelectorAll('.nmEsp').forEach(e => e.textContent = esp());
