@@ -426,11 +426,16 @@
     $('hSobra').textContent = fmt(r.sobraSalario);
     $('hSobra').classList.toggle('neg', r.sobraSalario < 0);
     const f = window.innerWidth < 600 ? fmt0 : fmt;   // no celular, sem centavos para caber
-    $('hEnt').textContent = f(r.entradas);
-    $('hSai').textContent = f(r.despesas);
+    // A conta do topo fecha: (entradas − sobra do vale) + o que a Mariana transfere − o que sai da sua conta = sobra
+    const ent = r.entradas - (r.sobraVale || 0), sai = r.despesas - (r.abatimentos || 0);
+    $('hEnt').textContent = f(ent);
+    $('hSai').textContent = f(sai);
     $('hMarLb').textContent = esp();
     $('hMar').textContent = f(r.repasseLiquido);
-    $('hNote').textContent = 'Entradas + repasse − saídas' + (r.sobraVale ? ` (sem os ${fmt(r.sobraVale)} que sobram no vale)` : '') + '. Investimentos não entram nesta conta.';
+    const notas = [];
+    if (r.abatimentos) notas.push(`saídas sem os ${fmt(r.abatimentos)} abatidos do repasse`);
+    if (r.sobraVale) notas.push(`entradas sem os ${fmt(r.sobraVale)} que sobram no vale`);
+    $('hNote').textContent = (notas.length ? 'Valores já ajustados: ' + notas.join('; ') + '. ' : '') + 'Investimentos não entram nesta conta.';
   }
   function mudarMes(k) {
     S.mes = k === 0 ? S.mesFoco : addMes(S.mes, k);
@@ -554,7 +559,9 @@
       <div class="rowv"><span>Gastos fixos</span><b>${fmt(r.fixos)}</b></div>
       <div class="rowv"><span>Cartão de crédito${r.descontos ? ' (já com descontos)' : ''}</span><b>${fmt(r.cartao)}</b></div>
       ${avulsas.length ? `<div class="rowv"><span>Pix, débito e dinheiro</span><b>${fmt(soma(avulsas))}</b></div>` : ''}
-      ${vale.length ? `<div class="rowv"><span>Vale-alimentação</span><b>${fmt(soma(vale))}</b></div>` : ''}</div>`;
+      ${vale.length ? `<div class="rowv"><span>Vale-alimentação</span><b>${fmt(soma(vale))}</b></div>` : ''}
+      ${r.abatimentos ? `<div class="rowv"><span>− Contas abatidas do repasse da ${esc(esp())}</span><b>${fmt(r.abatimentos)}</b></div>
+        <div class="rowv"><span><b>Sai da sua conta</b></span><b>${fmt(r.despesas - r.abatimentos)}</b></div>` : ''}</div>`;
     // Fixos
     if (fixas.length) {
       const aberto = soma(fixas.filter(x => !x.pago && x.meio !== 'Abatido do repasse'));
